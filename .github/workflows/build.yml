@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: ["Snes9x", "Snes9x-1.43-9", "Snes9x-1.43-15"]
+        image: ["Snes9x"]
 
     steps:
     - name: Checkout emu-ex-plus-alpha repo
