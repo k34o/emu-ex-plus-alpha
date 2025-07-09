@@ -27,6 +27,7 @@ jobs:
         else
           echo $DEBUG_KEYSTORE > debug.keystore.base64
           base64 --decode debug.keystore.base64 > debug.keystore
+          sudo mkdir -p /root/.android
           sudo cp -f debug.keystore /root/.android/.
         fi
 
