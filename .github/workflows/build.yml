@@ -74,20 +74,6 @@ jobs:
         make -f android-release.mk android-apk V=1 -j`nproc`
         cp target/android-release/build/outputs/apk/release/Snes9xEXPlus-release.apk "../EX-Emulators/Snes9xEXPlus-${COMMIT_PREFIX}.apk"
 
-    - name: Build Snes9x-1.43-9
-      if: ${{ matrix.image == 'Snes9x-1.43-9' }}
-      run: |
-        cd Snes9x/1.43
-        make -f android-release-9.mk android-apk V=1 -j`nproc`
-        cp target/android-release-9/build/outputs/apk/release/Snes9xEX-release.apk "../../EX-Emulators/Snes9xEX-9-${COMMIT_PREFIX}.apk"
-
-    - name: Build Snes9x-1.43-15
-      if: ${{ matrix.image == 'Snes9x-1.43-15' }}
-      run: |
-        cd Snes9x/1.43
-        make -f android-release-15.mk android-apk V=1 -j`nproc`
-        cp target/android-release-15/build/outputs/apk/release/Snes9xEX-release.apk "../../EX-Emulators/Snes9xEX-15-${COMMIT_PREFIX}.apk"
-
     - name: Upload EX-Emulators artifacts
       uses: actions/upload-artifact@v4
       with:
