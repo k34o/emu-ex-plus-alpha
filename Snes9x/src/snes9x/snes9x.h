@@ -256,7 +256,7 @@ struct SSettings
 	static const bool8	DisableGraphicWindows = 0;
 	uint16  ForcedBackdrop = 0;
 
-	static const bool8	DisplayTime = 0;
+	static const bool8	DisplayTime = 1;
 	static const bool8	DisplayFrameRate = 0;
 	static const bool8	DisplayWatchedAddresses = 0;
 	static const bool8	DisplayPressedKeys = 0;
