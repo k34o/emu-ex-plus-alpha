@@ -262,7 +262,7 @@ struct SSettings
 	static const bool8	DisplayPressedKeys = 0;
 	static const bool8	DisplayMovieFrame = 0;
 	static const bool	DisplayIndicators = 0;
-	static const bool8	AutoDisplayMessages = 0;
+	static const bool8	AutoDisplayMessages = 1;
 	static const uint32	InitialInfoStringTimeout = 0;
 	static uint16	DisplayColor;
 	static const bool8	BilinearFilter = 0;
