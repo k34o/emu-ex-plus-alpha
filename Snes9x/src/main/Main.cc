@@ -373,15 +373,7 @@ void Snes9xSystem::runFrame(EmuSystemTaskContext taskCtx, EmuVideo *video, EmuAu
 	}
 	emuSysTask = taskCtx;
 	emuVideo = video;
-	IPPU.RenderThisFrame = video ? TRUE : FALSE;
-
-	// WRAM[0]監視機能を追加
-	if(video && Memory.RAM) {
-		char wramDisplay[32];
-		snprintf(wramDisplay, sizeof(wramDisplay), "WRAM[0]: 0x%02X (%d)", Memory.RAM[0], Memory.RAM[0]);
-		S9xVariableDisplayString(wramDisplay, 1, 10, false, S9X_NO_INFO);
-	}
-	
+	IPPU.RenderThisFrame = video ? TRUE : FALSE;	
 	#ifndef SNES9X_VERSION_1_4
 	S9xSetSamplesAvailableCallback([](void *audio)
 		{
