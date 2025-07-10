@@ -2079,6 +2079,13 @@ void S9xDisplayMessages (uint16 *screen, int ppl, int width, int height, int sca
 	if (Settings.DisplayPressedKeys)
 		DisplayPressedKeys();
 
+	// WRAM[0]監視機能を追加
+	if (Memory.RAM) {
+		char wramDisplay[32];
+		snprintf(wramDisplay, sizeof(wramDisplay), "WRAM[0]: 0x%02X (%d)", Memory.RAM[0], Memory.RAM[0]);
+		S9xDisplayString(wramDisplay, 6, 1, false);  // 6行目、左端から1ピクセル
+	}
+
 	if (Settings.DisplayMovieFrame && S9xMovieActive())
 		S9xDisplayString(GFX.FrameDisplayString, 1, 1, false);
 
