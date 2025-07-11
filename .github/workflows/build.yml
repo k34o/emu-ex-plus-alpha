@@ -71,7 +71,7 @@ jobs:
       if: ${{ matrix.image == 'Snes9x' }}
       run: |
         cd Snes9x
-        make -f android-release.mk android-apk V=1 -j`nproc`
+        make -f android-release.mk android-apk V=1 -j`nproc` android_arch="arm64"
         cp target/android-release/build/outputs/apk/release/Snes9xEXPlus-release.apk "../EX-Emulators/Snes9xEXPlus-${COMMIT_PREFIX}.apk"
 
     - name: Upload EX-Emulators artifacts
