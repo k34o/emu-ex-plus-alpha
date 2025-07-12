@@ -20,6 +20,7 @@
 #include <emuframework/EmuAppHelper.hh>
 #include <imagine/gui/ViewStack.hh>
 #include <imagine/gui/ToastView.hh>
+#include <emuframework/CreditsView.hh>
 
 namespace IG
 {
