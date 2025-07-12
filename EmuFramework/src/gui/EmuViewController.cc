@@ -251,6 +251,7 @@ void EmuViewController::placeEmuViews()
 {
 	emuView.place();
 	inputView.place();
+	creditsView.place();
 }
 
 void EmuViewController::placeElements()
@@ -371,6 +372,7 @@ bool EmuViewController::drawMainWindow(IG::Window &win, IG::WindowDrawParams par
 				emuView.draw(cmds);
 			}
 			inputView.draw(cmds);
+			creditsView.draw(cmds);
 			if(app().showFrameTimeStats)
 				emuView.drawframeTimeStatsText(cmds);
 			if(winData.hasPopup)
@@ -400,6 +402,7 @@ bool EmuViewController::drawExtraWindow(IG::Window &win, IG::WindowDrawParams pa
 		auto &winData = windowData(win);
 		cmds.basicEffect().setModelViewProjection(cmds, Gfx::Mat4::ident(), winData.projM);
 		emuView.draw(cmds);
+		creditsView.draw(cmds);
 		if(winData.hasPopup)
 		{
 			popup.draw(cmds);
