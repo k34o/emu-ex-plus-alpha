@@ -42,8 +42,8 @@ EmuViewController::EmuViewController(ViewAttachParams viewAttach,
 	VController &vCtrl, EmuVideoLayer &videoLayer, EmuSystem &sys, UTF16String creditsStr):
 	emuView{viewAttach, &videoLayer, sys},
 	inputView{viewAttach, vCtrl, videoLayer},
-	creditsView{viewAttach, creditsStr},
 	popup{viewAttach},
+	creditsView{viewAttach, creditsStr},
 	viewStack{viewAttach, app()}
 {
 	inputView.setController(this);
