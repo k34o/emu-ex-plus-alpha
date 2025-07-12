@@ -62,7 +62,7 @@ protected:
 class EmuViewController final: public ViewController, public EmuAppHelper
 {
 public:
-	EmuViewController(ViewAttachParams, VController &, EmuVideoLayer &, EmuSystem &);
+	EmuViewController(ViewAttachParams, VController &, EmuVideoLayer &, EmuSystem &, UTF16String);
 	void pushAndShow(std::unique_ptr<View>, const Input::Event &, bool needsNavView, bool isModal = false) final;
 	using ViewController::pushAndShow;
 	void pushAndShowModal(std::unique_ptr<View>, const Input::Event &, bool needsNavView);
