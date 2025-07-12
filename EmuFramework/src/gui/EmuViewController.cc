@@ -39,12 +39,12 @@ namespace EmuEx
 constexpr SystemLogger log{"EmuViewController"};
 
 EmuViewController::EmuViewController(ViewAttachParams viewAttach,
-	VController &vCtrl, EmuVideoLayer &videoLayer, EmuSystem &sys):
+	VController &vCtrl, EmuVideoLayer &videoLayer, EmuSystem &sys, UTF16String creditsStr):
 	emuView{viewAttach, &videoLayer, sys},
 	inputView{viewAttach, vCtrl, videoLayer},
+	creditsView{viewAttach, EmuSystem::creditsViewStr},
 	popup{viewAttach},
-	viewStack{viewAttach, app()},
-	creditsView{viewAttach, EmuSystem::creditsViewStr}
+	viewStack{viewAttach, app()}
 {
 	inputView.setController(this);
 	auto &face = viewAttach.viewManager.defaultFace;
