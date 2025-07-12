@@ -43,7 +43,8 @@ EmuViewController::EmuViewController(ViewAttachParams viewAttach,
 	emuView{viewAttach, &videoLayer, sys},
 	inputView{viewAttach, vCtrl, videoLayer},
 	popup{viewAttach},
-	viewStack{viewAttach, app()}
+	viewStack{viewAttach, app()},
+	creditsView{viewAttach, EmuSystem::creditsViewStr}
 {
 	inputView.setController(this);
 	auto &face = viewAttach.viewManager.defaultFace;
