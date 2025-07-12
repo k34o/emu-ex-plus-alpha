@@ -109,6 +109,7 @@ public:
 	EmuInputView inputView;
 	ToastView popup;
 	ConditionalMember<Gfx::supportsPresentationTime, SteadyClockTimePoint> presentTime{};
+	CreditsView creditsView;
 protected:
 	EmuMenuViewStack viewStack;
 	bool showingEmulation{};
