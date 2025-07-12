@@ -47,8 +47,8 @@ struct MainWindowData : public WindowData
 {
 	EmuViewController viewController;
 
-	MainWindowData(ViewAttachParams attach, VController &vCtrl, EmuVideoLayer &layer, EmuSystem &system, UTF16String creditsStr):
-		viewController{attach, vCtrl, layer, system, creditsStr} {}
+	MainWindowData(ViewAttachParams attach, VController &vCtrl, EmuVideoLayer &layer, EmuSystem &system):
+		viewController{attach, vCtrl, layer, system} {}
 };
 
 inline auto &windowData(const IG::Window &win)
