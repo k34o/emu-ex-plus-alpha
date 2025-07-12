@@ -431,7 +431,7 @@ void EmuApp::mainInitCommon(IG::ApplicationInitParams initParams, IG::Applicatio
 			viewManager.defaultBoldFace = {renderer, fontManager.makeBoldSystem(), fontSettings(win)};
 			ViewAttachParams viewAttach{viewManager, win, renderer.task()};
 			auto &vController = inputManager.vController;
-			auto &winData = win.makeAppData<MainWindowData>(viewAttach, vController, videoLayer, system());
+			auto &winData = win.makeAppData<MainWindowData>(viewAttach, vController, videoLayer, system(), EmuSystem::creditsViewStr);
 			winData.updateWindowViewport(win, makeViewport(win), renderer);
 			win.setAcceptDnd(true);
 			renderer.setWindowValidOrientations(win, menuOrientation);
