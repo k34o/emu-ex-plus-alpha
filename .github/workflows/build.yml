@@ -73,8 +73,8 @@ jobs:
     - name: Run script
       run: |
         cd imagine/bundle/all
-        chmod +x ./makeAll-android.sh
-        ./makeAll-android.sh install
+        chmod +x ./makeAll-android-arm64.sh
+        ./makeAll-android-arm64.sh install
       shell: bash
 
     - name: Build environment
