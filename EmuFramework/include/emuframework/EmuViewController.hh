@@ -43,6 +43,7 @@ using namespace IG;
 class EmuApp;
 class EmuAudio;
 class EmuSystem;
+class WramView;
 struct WindowData;
 struct FrameTimeConfig;
 class MainMenuView;
@@ -108,6 +109,9 @@ public:
 	EmuView emuView;
 	EmuInputView inputView;
 	ToastView popup;
+	#ifdef SNES9X_VERSION
+	std::unique_ptr<WramView> wramView;
+	#endif
 	ConditionalMember<Gfx::supportsPresentationTime, SteadyClockTimePoint> presentTime{};
 protected:
 	EmuMenuViewStack viewStack;
