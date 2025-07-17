@@ -14,7 +14,7 @@
 #include <ppu.h>
 #endif
 #include <imagine/logger/logger.h>
-#include <emuframework/CollectTextInputView.hh>
+//#include <emuframework/CollectTextInputView.hh>
 #ifndef SNES9X_VERSION_1_4
 #include <memory.h> // Snes9xのメモリアクセス用
 #endif
