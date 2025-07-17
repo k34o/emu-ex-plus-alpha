@@ -18,6 +18,7 @@
 #ifndef SNES9X_VERSION_1_4
 #include <memory.h> // Snes9xのメモリアクセス用
 #endif
+#include "memmap.h"
 
 namespace EmuEx
 {
@@ -270,6 +271,133 @@ public:
 	{}
 };
 
+class WRAMViewerView : public TableView, public MainAppHelper
+{
+	using MainAppHelper::system;
+
+	static constexpr size_t WRAM_SIZE = 0x20000; // 128KB WRAM
+	static constexpr size_t ITEMS_PER_PAGE = 16;
+
+	size_t currentAddress = 0;
+	bool showHex = true;
+
+	TextHeadingMenuItem addressHeading{"Address Range", attachParams()};
+
+	DualTextMenuItem addressRange
+	{
+		"Current Range",
+		std::format("${:06X} - ${:06X}", currentAddress, currentAddress + (ITEMS_PER_PAGE * 16) - 1),
+		attachParams(),
+		[this](Input::Event e)
+		{
+			pushAndShowNewCollectValueInputView<int>(attachParams(), e,
+				"Enter Address (hex)", std::format("{:X}", currentAddress),
+				[this](CollectTextInputView&, auto val)
+				{
+					currentAddress = std::clamp(val, 0, (int)(WRAM_SIZE - ITEMS_PER_PAGE * 16));
+					updateDisplay();
+					return true;
+				});
+		}
+	};
+
+	BoolMenuItem displayMode
+	{
+		"Display Mode", attachParams(),
+		showHex,
+		[this](BoolMenuItem &item)
+		{
+			showHex = item.flipBoolValue(*this);
+			updateDisplay();
+		}
+	};
+
+	TextHeadingMenuItem dataHeading{"WRAM Data", attachParams()};
+
+	std::array<DualTextMenuItem, ITEMS_PER_PAGE> wramItems;
+
+	void updateDisplay()
+	{
+		if(!system().hasContent()) return;
+
+		addressRange.set2ndName(std::format("${:06X} - ${:06X}",
+			currentAddress, currentAddress + (ITEMS_PER_PAGE * 16) - 1));
+
+		for(size_t i = 0; i < ITEMS_PER_PAGE && (currentAddress + i * 16) < WRAM_SIZE; i++)
+		{
+			size_t addr = currentAddress + i * 16;
+			std::string addrStr = std::format("${:06X}:", addr);
+			std::string dataStr;
+
+			for(int j = 0; j < 16 && (addr + j) < WRAM_SIZE; j++)
+			{
+				uint8 value = Memory.RAM[addr + j];
+				if(showHex)
+				{
+					dataStr += std::format("{:02X} ", value);
+				}
+				else
+				{
+					dataStr += std::format("{:3d} ", value);
+				}
+			}
+
+			wramItems[i].compile(addrStr);
+			wramItems[i].set2ndName(dataStr);
+		}
+
+		displayMode.set2ndName(showHex ? "Hex" : "Dec");
+	}
+
+	std::array<MenuItem*, 4 + ITEMS_PER_PAGE> menuItems;
+
+public:
+	WRAMViewerView(ViewAttachParams attach):
+		TableView{"WRAM Viewer", attach, menuItems}
+	{
+		// メニューアイテムの初期化
+		for(size_t i = 0; i < ITEMS_PER_PAGE; i++)
+		{
+			wramItems[i] = DualTextMenuItem
+			{
+				"", "", attachParams(),
+				[this, i](Input::Event e)
+				{
+					size_t addr = currentAddress + i * 16;
+					pushAndShowNewCollectValueInputView<int>(attachParams(), e,
+						std::format("Edit Address ${:06X}", addr), "",
+						[this, addr](CollectTextInputView&, auto val)
+						{
+							if(addr < WRAM_SIZE)
+							{
+								Memory.RAM[addr] = static_cast<uint8>(val & 0xFF);
+								updateDisplay();
+							}
+							return true;
+						});
+				}
+			};
+		}
+
+		// メニュー配列の設定
+		menuItems[0] = &addressHeading;
+		menuItems[1] = &addressRange;
+		menuItems[2] = &displayMode;
+		menuItems[3] = &dataHeading;
+
+		for(size_t i = 0; i < ITEMS_PER_PAGE; i++)
+		{
+			menuItems[4 + i] = &wramItems[i];
+		}
+	}
+
+	void onShow() override
+	{
+		TableView::onShow();
+		updateDisplay();
+	}
+};
+
 class CustomSystemActionsView : public SystemActionsView
 {
 private:
@@ -413,135 +541,6 @@ public:
 		item.emplace_back(&satPath);
 		item.emplace_back(&bsxBios);
 		item.emplace_back(&sufamiBios);
-	}
-};
-
-class WRAMViewerView : public TableView, public MainAppHelper
-{
-	using MainAppHelper::system;
-
-	static constexpr size_t WRAM_SIZE = 0x20000; // 128KB WRAM
-	static constexpr size_t ITEMS_PER_PAGE = 16;
-
-	size_t currentAddress = 0;
-	bool showHex = true;
-
-	TextHeadingMenuItem addressHeading{"Address Range", attachParams()};
-
-	DualTextMenuItem addressRange
-	{
-		"Current Range",
-		std::format("${:06X} - ${:06X}", currentAddress, currentAddress + (ITEMS_PER_PAGE * 16) - 1),
-		attachParams(),
-		[this](Input::Event e)
-		{
-			pushAndShowNewCollectValueInputView<int>(attachParams(), e,
-				"Enter Address (hex)", std::format("{:X}", currentAddress),
-				[this](CollectTextInputView&, auto val)
-				{
-					currentAddress = std::clamp(val, 0, (int)(WRAM_SIZE - ITEMS_PER_PAGE * 16));
-					updateDisplay();
-					return true;
-				});
-		}
-	};
-
-	BoolMenuItem displayMode
-	{
-		"Display Mode", attachParams(),
-		showHex,
-		[this](BoolMenuItem &item)
-		{
-			showHex = item.flipBoolValue(*this);
-			updateDisplay();
-		}
-	};
-
-	TextHeadingMenuItem dataHeading{"WRAM Data", attachParams()};
-
-	std::array<DualTextMenuItem, ITEMS_PER_PAGE> wramItems;
-
-	void updateDisplay()
-	{
-		if(!system().hasContent()) return;
-
-		addressRange.set2ndName(std::format("${:06X} - ${:06X}",
-			currentAddress, currentAddress + (ITEMS_PER_PAGE * 16) - 1));
-
-		// SNES9xのWRAMアクセス (Memory.RAM配列を使用)
-		extern uint8 *Memory_RAM; // Snes9xのメモリマップから
-
-		for(size_t i = 0; i < ITEMS_PER_PAGE && (currentAddress + i * 16) < WRAM_SIZE; i++)
-		{
-			size_t addr = currentAddress + i * 16;
-			std::string addrStr = std::format("${:06X}:", addr);
-			std::string dataStr;
-
-			for(int j = 0; j < 16 && (addr + j) < WRAM_SIZE; j++)
-			{
-				uint8 value = Memory_RAM[addr + j];
-				if(showHex)
-				{
-					dataStr += std::format("{:02X} ", value);
-				}
-				else
-				{
-					dataStr += std::format("{:3d} ", value);
-				}
-			}
-
-			wramItems[i].compile(addrStr, dataStr);
-		}
-
-		displayMode.set2ndName(showHex ? "Hex" : "Dec");
-	}
-
-	std::array<MenuItem*, 4 + ITEMS_PER_PAGE> menuItems;
-
-public:
-	WRAMViewerView(ViewAttachParams attach):
-		TableView{"WRAM Viewer", attach, menuItems}
-	{
-		// メニューアイテムの初期化
-		for(size_t i = 0; i < ITEMS_PER_PAGE; i++)
-		{
-			wramItems[i] = DualTextMenuItem
-			{
-				"", "", attachParams(),
-				[this, i](Input::Event e)
-				{
-					size_t addr = currentAddress + i * 16;
-					pushAndShowNewCollectValueInputView<int>(attachParams(), e,
-						std::format("Edit Address ${:06X}", addr), "",
-						[this, addr](CollectTextInputView&, auto val)
-						{
-							if(addr < WRAM_SIZE)
-							{
-								Memory_RAM[addr] = static_cast<uint8>(val & 0xFF);
-								updateDisplay();
-							}
-							return true;
-						});
-				}
-			};
-		}
-
-		// メニュー配列の設定
-		menuItems[0] = &addressHeading;
-		menuItems[1] = &addressRange;
-		menuItems[2] = &displayMode;
-		menuItems[3] = &dataHeading;
-
-		for(size_t i = 0; i < ITEMS_PER_PAGE; i++)
-		{
-			menuItems[4 + i] = &wramItems[i];
-		}
-	}
-
-	void onShow() override
-	{
-		TableView::onShow();
-		updateDisplay();
 	}
 };
 
