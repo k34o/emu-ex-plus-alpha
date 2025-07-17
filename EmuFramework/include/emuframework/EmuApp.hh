@@ -151,6 +151,7 @@ public:
 		SYSTEM_OPTIONS,
 		FILE_PATH_OPTIONS,
 		GUI_OPTIONS,
+		WRAM_VIEWER,
 	};
 
 	// Static app configuration
