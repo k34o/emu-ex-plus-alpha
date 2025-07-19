@@ -276,7 +276,7 @@ class WRAMViewerView : public TableView, public MainAppHelper
 	using MainAppHelper::system;
 
 	static constexpr size_t WRAM_SIZE = 0x20000; // 128KB WRAM
-	static constexpr size_t ITEMS_PER_PAGE = 8;
+	static constexpr size_t ITEMS_PER_PAGE = 16;
 
 	size_t currentAddress = 0;
 	bool showHex = true;
@@ -286,7 +286,7 @@ class WRAMViewerView : public TableView, public MainAppHelper
 	DualTextMenuItem addressRange
 	{
 		"Current Range",
-		std::format("${:06X} - ${:06X}", currentAddress, currentAddress + (ITEMS_PER_PAGE * 16) - 1),
+		std::format("${:06X} - ${:06X}", currentAddress, currentAddress + (ITEMS_PER_PAGE * 8) - 1),
 		attachParams(),
 		[this](Input::Event e)
 		{
@@ -294,7 +294,7 @@ class WRAMViewerView : public TableView, public MainAppHelper
 				"Enter Address (hex)", std::format("{:X}", currentAddress),
 				[this](CollectTextInputView&, auto val)
 				{
-					currentAddress = std::clamp(val, 0, (int)(WRAM_SIZE - ITEMS_PER_PAGE * 16));
+					currentAddress = std::clamp(val, 0, (int)(WRAM_SIZE - ITEMS_PER_PAGE *　8));
 					updateDisplay();
 					return true;
 				});
@@ -321,15 +321,15 @@ class WRAMViewerView : public TableView, public MainAppHelper
 		if(!system().hasContent()) return;
 
 		addressRange.set2ndName(std::format("${:06X} - ${:06X}",
-			currentAddress, currentAddress + (ITEMS_PER_PAGE * 16) - 1));
+			currentAddress, currentAddress + (ITEMS_PER_PAGE * 8) - 1));
 
-		for(size_t i = 0; i < ITEMS_PER_PAGE && (currentAddress + i * 16) < WRAM_SIZE; i++)
+		for(size_t i = 0; i < ITEMS_PER_PAGE && (currentAddress + i * 8) < WRAM_SIZE; i++)
 		{
-			size_t addr = currentAddress + i * 16;
+			size_t addr = currentAddress + i * 8;
 			std::string addrStr = std::format("${:06X}:", addr);
 			std::string dataStr;
 
-			for(int j = 0; j < 16 && (addr + j) < WRAM_SIZE; j++)
+			for(int j = 0; j < 8 && (addr + j) < WRAM_SIZE; j++)
 			{
 				uint8 value = Memory.RAM[addr + j];
 				if(showHex)
@@ -363,7 +363,7 @@ public:
 				"", "", attachParams(),
 				[this, i](Input::Event e)
 				{
-					size_t addr = currentAddress + i * 16;
+					size_t addr = currentAddress + i * 8;
 					pushAndShowNewCollectValueInputView<int>(attachParams(), e,
 						std::format("Edit Address ${:06X}", addr), "",
 						[this, addr](CollectTextInputView&, auto val)
