@@ -344,6 +344,7 @@ class WRAMViewerView : public TableView, public MainAppHelper
 
 			wramItems[i].compile(addrStr);
 			wramItems[i].set2ndName(dataStr);
+			wramItems[i].place();
 		}
 
 		displayMode.set2ndName(showHex ? "Hex" : "Dec");
