@@ -276,7 +276,7 @@ class WRAMViewerView : public TableView, public MainAppHelper
 	using MainAppHelper::system;
 
 	static constexpr size_t WRAM_SIZE = 0x20000; // 128KB WRAM
-	static constexpr size_t ITEMS_PER_PAGE = 16;
+	static constexpr size_t ITEMS_PER_PAGE = 40;
 
 	size_t currentAddress = 0;
 	bool showHex = true;
