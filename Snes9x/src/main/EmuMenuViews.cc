@@ -348,6 +348,7 @@ class WRAMViewerView : public TableView, public MainAppHelper
 		}
 
 		displayMode.set2ndName(showHex ? "Hex" : "Dec");
+		displayMode.place();
 	}
 
 	std::array<MenuItem*, 4 + ITEMS_PER_PAGE> menuItems;
