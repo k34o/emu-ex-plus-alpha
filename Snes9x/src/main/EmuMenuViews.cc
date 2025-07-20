@@ -375,7 +375,7 @@ class WRAMViewerView : public TableView, public MainAppHelper
 			size_t physicalAddr = byteAddr - WRAM_INIT_ADDRESS;  
 			uint8 value = Memory.RAM[physicalAddr];  
 			  
-			(*byteItems(*byteItems)[j] = TextMenuItem
+			(*byteItems)[j] = TextMenuItem
 			{
 				std::format("${:06X}: {:02X}", byteAddr, value),
 				attachParams(),
