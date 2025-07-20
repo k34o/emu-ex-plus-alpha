@@ -339,7 +339,8 @@ class WRAMViewerView : public TableView, public MainAppHelper
 
 			for(int j = 0; j < 8 && (addr + j) < WRAM_INIT_ADDRESS + WRAM_SIZE; j++)
 			{
-				uint8 value = Memory.RAM[addr + j];
+				size_t physicalAddr = (addr + j) - WRAM_INIT_ADDRESS;
+				uint8 value = Memory.RAM[physicalAddr];
 				if(showHex)
 				{
 					dataStr += std::format("{:02X} ", value);
@@ -378,9 +379,10 @@ public:
 						std::format("Edit Address ${:06X}", addr), "",
 						[this, addr](CollectTextInputView&, auto val)
 						{
-							if(addr < WRAM_INIT_ADDRESS + WRAM_SIZE)
+							size_t physicalAddr = addr - WRAM_INIT_ADDRESS;
+							if(physicalAddr < WRAM_SIZE)
 							{
-								Memory.RAM[addr] = static_cast<uint8>(val & 0xFF);
+								Memory.RAM[physicalAddr] = static_cast<uint8>(val & 0xFF);
 								updateDisplay();
 							}
 							return true;
