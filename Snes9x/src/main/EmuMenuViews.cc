@@ -383,15 +383,22 @@ class WRAMViewerView : public TableView, public MainAppHelper
 					size_t physicalAddr = byteAddr - WRAM_INIT_ADDRESS;  
 					uint8 currentValue = Memory.RAM[physicalAddr];  
 					  
-					pushAndShowNewCollectValueInputView<int>(attachParams(), e,  
+					pushAndShowNewCollectValueInputView<const char*>(attachParams(), e,  
 						std::format("Edit Address ${:06X}", byteAddr),   
 						std::format("{}", currentValue),  
-						[this, physicalAddr](CollectTextInputView&, auto val)  
-						{  
+						[this, physicalAddr](CollectTextInputView&, auto str)  
+						{
+							unsigned val = parseHex(str); // 16進数をパース 
+							if(val > 0xFF)
+							{
+								app().postMessage(true, "Value must be <= FF");
+								return false;
+							}
 							if(physicalAddr < WRAM_SIZE)  
 							{  
 								Memory.RAM[physicalAddr] = static_cast<uint8>(val & 0xFF);  
-								updateDisplay();  
+								updateDisplay();
+								(*byteItems)[j].compile(std::format("${:06X}: {:02X}", byteAddr, static_cast<uint8>(val & 0xFF))); 
 							}  
 							return true;  
 						});  
