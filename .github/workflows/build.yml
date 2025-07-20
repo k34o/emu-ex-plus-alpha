@@ -34,6 +34,19 @@ jobs:
         path: imagine-sdk
         key: imagine-sdk-${{ hashFiles('imagine/**') }}
 
+    - name: Decode debug keystore
+      env:
+        DEBUG_KEYSTORE: ${{ secrets.DEBUG_KEYSTORE }}
+      run: |
+        if [ -z "$DEBUG_KEYSTORE" ]
+        then
+          echo "No debug keystore value"
+        else
+          echo $DEBUG_KEYSTORE > debug.keystore.base64
+          base64 --decode debug.keystore.base64 > debug.keystore
+          sudo cp -f debug.keystore /root/.android/.
+        fi
+
     - name: Install build dependencies (ARM64 optimized)
       run: |
         sudo apt-get update
