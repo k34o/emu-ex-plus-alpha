@@ -399,7 +399,10 @@ class WRAMViewerView : public TableView, public MainAppHelper
 							if(physicalAddr < WRAM_SIZE)
 							{
 								Memory.RAM[physicalAddr] = static_cast<uint8>(val & 0xFF);
-								updateDisplay();  // This will refresh the main view  
+								updateDisplay();  // This will refresh the main view
+								dismissPrevious(); // 現在のバイト選択ビューを閉じる
+								size_t baseAddr = byteAddr & ~7; // 8バイト境界に合わせる
+								pushAndShow(makeByteSelectionView(baseAddr), appContext().defaultInputEvent()); 
 								// Note: We can't update the byte selection view here  
 								// because we don't have access to byteItems or j  
 							}
