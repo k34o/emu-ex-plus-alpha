@@ -278,8 +278,9 @@ class WRAMViewerView : public TableView, public MainAppHelper
 
 	static constexpr size_t WRAM_SIZE = 0x20000; // 128KB WRAM
 	static constexpr size_t ITEMS_PER_PAGE = 64;
+	static constexpr size_t WRAM_INIT_ADDRESS = 0x7e0000;
 
-	size_t currentAddress = 0x7e0000;
+	size_t currentAddress = WRAM_INIT_ADDRESS;
 	bool showHex = true;
 
 	TextHeadingMenuItem addressHeading{"Address Range", attachParams()};
@@ -296,7 +297,7 @@ class WRAMViewerView : public TableView, public MainAppHelper
 				[this](CollectTextInputView&, auto str)
 				{
 					unsigned addr = strtoul(str, nullptr, 16); // ← parseHex()で16進数をパース
-					if(addr > WRAM_SIZE - ITEMS_PER_PAGE * 8 || addr < 0) // ← 範囲チェック追加
+					if(addr > WRAM_INIT_ADDRESS + WRAM_SIZE  - ITEMS_PER_PAGE * 8 || addr < 0x7e0000) // ← 範囲チェック追加
 					{
 						app().postMessage(true, "Address out of range");
 						return false;
@@ -330,13 +331,13 @@ class WRAMViewerView : public TableView, public MainAppHelper
 		addressRange.set2ndName(std::format("${:06X} - ${:06X}",
 			currentAddress, currentAddress + (ITEMS_PER_PAGE * 8) - 1));
 
-		for(size_t i = 0; i < ITEMS_PER_PAGE && (currentAddress + i * 8) < WRAM_SIZE; i++)
+		for(size_t i = 0; i < ITEMS_PER_PAGE && (currentAddress + i * 8) < WRAM_INIT_ADDRESS + WRAM_SIZE; i++)
 		{
 			size_t addr = currentAddress + i * 8;
 			std::string addrStr = ((addr & 0xF) == 0) ? std::format("${:06X}:", addr) : "";
 			std::string dataStr;
 
-			for(int j = 0; j < 8 && (addr + j) < WRAM_SIZE; j++)
+			for(int j = 0; j < 8 && (addr + j) < WRAM_INIT_ADDRESS + WRAM_SIZE; j++)
 			{
 				uint8 value = Memory.RAM[addr + j];
 				if(showHex)
@@ -377,7 +378,7 @@ public:
 						std::format("Edit Address ${:06X}", addr), "",
 						[this, addr](CollectTextInputView&, auto val)
 						{
-							if(addr < WRAM_SIZE)
+							if(addr < WRAM_INIT_ADDRESS + WRAM_SIZE)
 							{
 								Memory.RAM[addr] = static_cast<uint8>(val & 0xFF);
 								updateDisplay();
