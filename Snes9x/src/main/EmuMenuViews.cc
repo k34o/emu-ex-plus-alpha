@@ -326,7 +326,7 @@ class WRAMViewerView : public TableView, public MainAppHelper
 		for(size_t i = 0; i < ITEMS_PER_PAGE && (currentAddress + i * 8) < WRAM_SIZE; i++)
 		{
 			size_t addr = currentAddress + i * 8;
-			std::string addrStr = std::format("${:06X}:", addr);
+			std::string addrStr = ((addr & 0xF) == 0) ? std::format("${:06X}:", addr) : "";
 			std::string dataStr;
 
 			for(int j = 0; j < 8 && (addr + j) < WRAM_SIZE; j++)
