@@ -360,6 +360,70 @@ class WRAMViewerView : public TableView, public MainAppHelper
 		displayMode.place();
 	}
 
+
+	std::unique_ptr<TableView> makeByteSelectionView(size_t baseAddr)  
+	{  
+		// 8バイト分のTextMenuItemを動的に作成  
+		auto byteItems = std::make_shared<std::array<TextMenuItem, 8>>();  
+		  
+		for(int j = 0; j < 8; j++)  
+		{  
+			size_t byteAddr = baseAddr + j;  
+			if(byteAddr >= WRAM_INIT_ADDRESS + WRAM_SIZE) break;  
+			  
+			size_t physicalAddr = byteAddr - WRAM_INIT_ADDRESS;  
+			uint8 value = Memory.RAM[physicalAddr];  
+			  
+			(*byteItems)[j] = TextMenuItem  
+			{  
+				std::format("${:06X}: {:02X}", byteAddr, value),  
+				attachParams(),  
+				[this, byteAddr](Input::Event e)  
+				{  
+					size_t physicalAddr = byteAddr - WRAM_INIT_ADDRESS;  
+					uint8 currentValue = Memory.RAM[physicalAddr];  
+					  
+					pushAndShowNewCollectValueInputView<int>(attachParams(), e,  
+						std::format("Edit Address ${:06X}", byteAddr),   
+						std::format("{}", currentValue),  
+						[this, physicalAddr](CollectTextInputView&, auto val)  
+						{  
+							if(physicalAddr < WRAM_SIZE)  
+							{  
+								Memory.RAM[physicalAddr] = static_cast<uint8>(val & 0xFF);  
+								updateDisplay();  
+							}  
+							return true;  
+						});  
+				}  
+			};  
+		}  
+  
+		// TableViewを作成して返す  
+		return std::make_unique<MenuItemTableView>  
+		(  
+			std::format("Select Byte (${:06X}-${:06X})", baseAddr, baseAddr + 7),  
+			attachParams(),  
+			-1,  
+			[byteItems](TableView::ItemMessage msg) -> TableView::ItemReply  
+			{  
+				return msg.visit(overloaded  
+				{  
+					[&](const TableView::ItemsMessage&) -> TableView::ItemReply { return 8u; },  
+					[&](const TableView::GetItemMessage& m) -> TableView::ItemReply   
+					{   
+						return m.idx < 8 ? &(*byteItems)[m.idx] : nullptr;   
+					},  
+				});  
+			}  
+		);  
+	}
+
+
+
+
+		
+
 	std::array<MenuItem*, 4 + ITEMS_PER_PAGE> menuItems;
 
 public:
@@ -375,18 +439,7 @@ public:
 				[this, i](Input::Event e)
 				{
 					size_t addr = currentAddress + i * 8;
-					pushAndShowNewCollectValueInputView<int>(attachParams(), e,
-						std::format("Edit Address ${:06X}", addr), "",
-						[this, addr](CollectTextInputView&, auto val)
-						{
-							size_t physicalAddr = addr - WRAM_INIT_ADDRESS;
-							if(physicalAddr < WRAM_SIZE)
-							{
-								Memory.RAM[physicalAddr] = static_cast<uint8>(val & 0xFF);
-								updateDisplay();
-							}
-							return true;
-						});
+					pushAndShow(makeByteSelectionView(addr), e);
 				}
 			};
 		}
