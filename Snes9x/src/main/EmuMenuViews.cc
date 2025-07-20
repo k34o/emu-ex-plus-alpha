@@ -379,7 +379,7 @@ class WRAMViewerView : public TableView, public MainAppHelper
 			{  
 				std::format("${:06X}: {:02X}", byteAddr, value),  
 				attachParams(),  
-				[this, byteAddr](Input::Event e)  
+				[this, byteAddr, byteItems, j](Input::Event e)  
 				{  
 					size_t physicalAddr = byteAddr - WRAM_INIT_ADDRESS;  
 					uint8 currentValue = Memory.RAM[physicalAddr];  
@@ -389,7 +389,7 @@ class WRAMViewerView : public TableView, public MainAppHelper
 						std::format("{}", currentValue),  
 						[this, physicalAddr, byteItems, j, byteAddr](CollectTextInputView&, auto str)  
 						{
-							unsigned val = parseHex(str); // 16進数をパース 
+							unsigned val = strtoul(str, nullptr, 16); // 16進数をパース 
 							if(val > 0xFF)
 							{
 								app().postMessage(true, "Value must be <= FF");
