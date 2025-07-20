@@ -20,6 +20,7 @@
 #endif
 #include "memmap.h"
 #include <stdlib.h>
+#include <emuframework/viewUtils.hh>
 
 namespace EmuEx
 {
@@ -386,7 +387,7 @@ class WRAMViewerView : public TableView, public MainAppHelper
 					pushAndShowNewCollectValueInputView<const char*>(attachParams(), e,  
 						std::format("Edit Address ${:06X}", byteAddr),   
 						std::format("{}", currentValue),  
-						[this, physicalAddr](CollectTextInputView&, auto str)  
+						[this, physicalAddr, byteItems, j, byteAddr](CollectTextInputView&, auto str)  
 						{
 							unsigned val = parseHex(str); // 16進数をパース 
 							if(val > 0xFF)
