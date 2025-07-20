@@ -400,11 +400,10 @@ class WRAMViewerView : public TableView, public MainAppHelper
 		}  
   
 		// TableViewを作成して返す  
-		return std::make_unique<MenuItemTableView>  
+		return std::make_unique<TableView>  
 		(  
 			std::format("Select Byte (${:06X}-${:06X})", baseAddr, baseAddr + 7),  
-			attachParams(),  
-			-1,  
+			attachParams(), 
 			[byteItems](TableView::ItemMessage msg) -> TableView::ItemReply  
 			{  
 				return msg.visit(overloaded  
