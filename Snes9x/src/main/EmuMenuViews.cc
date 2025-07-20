@@ -279,7 +279,7 @@ class WRAMViewerView : public TableView, public MainAppHelper
 	static constexpr size_t WRAM_SIZE = 0x20000; // 128KB WRAM
 	static constexpr size_t ITEMS_PER_PAGE = 64;
 
-	size_t currentAddress = 0;
+	size_t currentAddress = 0x7e0000;
 	bool showHex = true;
 
 	TextHeadingMenuItem addressHeading{"Address Range", attachParams()};
