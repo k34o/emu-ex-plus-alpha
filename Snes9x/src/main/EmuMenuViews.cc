@@ -290,11 +290,17 @@ class WRAMViewerView : public TableView, public MainAppHelper
 		attachParams(),
 		[this](Input::Event e)
 		{
-			pushAndShowNewCollectValueInputView<int>(attachParams(), e,
+			pushAndShowNewCollectValueInputView<const char*>(attachParams(), e,
 				"Enter Address (hex)", std::format("{:X}", currentAddress),
-				[this](CollectTextInputView&, auto val)
+				[this](CollectTextInputView&, auto str)
 				{
-					currentAddress = std::clamp(val, 0, (int)(WRAM_SIZE - ITEMS_PER_PAGE *　8));
+					unsigned addr = parseHex(str); // ← parseHex()で16進数をパース
+					if(addr > WRAM_SIZE - ITEMS_PER_PAGE * 8 || addr < 0) // ← 範囲チェック追加
+					{
+						app().postMessage(true, "Address out of range");
+						return false;
+					}
+					currentAddress = addr;
 					updateDisplay();
 					return true;
 				});
