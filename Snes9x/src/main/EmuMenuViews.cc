@@ -375,11 +375,11 @@ class WRAMViewerView : public TableView, public MainAppHelper
 			size_t physicalAddr = byteAddr - WRAM_INIT_ADDRESS;  
 			uint8 value = Memory.RAM[physicalAddr];  
 			  
-			(*byteItems)[j] = TextMenuItem
+			(*byteItems(*byteItems)[j] = TextMenuItem
 			{
 				std::format("${:06X}: {:02X}", byteAddr, value),
 				attachParams(),
-				[this, byteAddr, byteItems, j](Input::Event e)  // Minimal capture  
+				[this, byteAddr](Input::Event e)  // Only capture byteAddr  
 				{
 					size_t physicalAddr = byteAddr - WRAM_INIT_ADDRESS;
 					uint8 currentValue = Memory.RAM[physicalAddr];
@@ -387,9 +387,9 @@ class WRAMViewerView : public TableView, public MainAppHelper
 					pushAndShowNewCollectValueInputView<const char*>(attachParams(), e,
 						std::format("Edit Address ${:06X} (hex)", byteAddr), 
 						std::format("{:02X}", currentValue),
-						[this, byteAddr, byteItems, j](CollectTextInputView&, auto str)
+						[this, byteAddr](CollectTextInputView&, auto str)  // Minimal capture  
 						{
-							unsigned val = strtoul(str, nullptr, 16);  // Use strtoul instead of parseHex  
+							unsigned val = strtoul(str, nullptr, 16);  
 							if(val > 0xFF)
 							{
 								app().postMessage(true, "Value must be <= FF");
@@ -399,8 +399,9 @@ class WRAMViewerView : public TableView, public MainAppHelper
 							if(physicalAddr < WRAM_SIZE)
 							{
 								Memory.RAM[physicalAddr] = static_cast<uint8>(val & 0xFF);
-								updateDisplay();
-								(*byteItems)[j].compile(std::format("${:06X}: {:02X}", byteAddr, static_cast<uint8>(val & 0xFF)));  
+								updateDisplay();  // This will refresh the main view  
+								// Note: We can't update the byte selection view here  
+								// because we don't have access to byteItems or j  
 							}
 							return true;
 						});
