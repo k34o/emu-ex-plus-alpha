@@ -375,36 +375,37 @@ class WRAMViewerView : public TableView, public MainAppHelper
 			size_t physicalAddr = byteAddr - WRAM_INIT_ADDRESS;  
 			uint8 value = Memory.RAM[physicalAddr];  
 			  
-			(*byteItems)[j] = TextMenuItem  
-			{  
-				std::format("${:06X}: {:02X}", byteAddr, value),  
-				attachParams(),  
-				[this, byteAddr, byteItems, j](Input::Event e)  
-				{  
-					size_t physicalAddr = byteAddr - WRAM_INIT_ADDRESS;  
-					uint8 currentValue = Memory.RAM[physicalAddr];  
-					  
-					pushAndShowNewCollectValueInputView<const char*>(attachParams(), e,  
-						std::format("Edit Address ${:06X}", byteAddr),   
-						std::format("{}", currentValue),  
-						[this, physicalAddr, byteItems, j, byteAddr](CollectTextInputView&, auto str)  
+			(*byteItems)[j] = TextMenuItem
+			{
+				std::format("${:06X}: {:02X}", byteAddr, value),
+				attachParams(),
+				[this, byteAddr, byteItems, j](Input::Event e)  // Minimal capture  
+				{
+					size_t physicalAddr = byteAddr - WRAM_INIT_ADDRESS;
+					uint8 currentValue = Memory.RAM[physicalAddr];
+					
+					pushAndShowNewCollectValueInputView<const char*>(attachParams(), e,
+						std::format("Edit Address ${:06X} (hex)", byteAddr), 
+						std::format("{:02X}", currentValue),
+						[this, byteAddr, byteItems, j](CollectTextInputView&, auto str)
 						{
-							unsigned val = strtoul(str, nullptr, 16); // 16進数をパース 
+							unsigned val = strtoul(str, nullptr, 16);  // Use strtoul instead of parseHex  
 							if(val > 0xFF)
 							{
 								app().postMessage(true, "Value must be <= FF");
 								return false;
 							}
-							if(physicalAddr < WRAM_SIZE)  
-							{  
-								Memory.RAM[physicalAddr] = static_cast<uint8>(val & 0xFF);  
+							size_t physicalAddr = byteAddr - WRAM_INIT_ADDRESS;  
+							if(physicalAddr < WRAM_SIZE)
+							{
+								Memory.RAM[physicalAddr] = static_cast<uint8>(val & 0xFF);
 								updateDisplay();
-								(*byteItems)[j].compile(std::format("${:06X}: {:02X}", byteAddr, static_cast<uint8>(val & 0xFF))); 
-							}  
-							return true;  
-						});  
-				}  
-			};  
+								(*byteItems)[j].compile(std::format("${:06X}: {:02X}", byteAddr, static_cast<uint8>(val & 0xFF)));  
+							}
+							return true;
+						});
+				}
+			};
 		}  
   
 		// TableViewを作成して返す  
