@@ -19,6 +19,7 @@
 #include <memory.h> // Snes9xのメモリアクセス用
 #endif
 #include "memmap.h"
+#include <stdlib.h>
 
 namespace EmuEx
 {
@@ -294,7 +295,7 @@ class WRAMViewerView : public TableView, public MainAppHelper
 				"Enter Address (hex)", std::format("{:X}", currentAddress),
 				[this](CollectTextInputView&, auto str)
 				{
-					unsigned addr = parseHex(str); // ← parseHex()で16進数をパース
+					unsigned addr = strtoul(str, nullptr, 16); // ← parseHex()で16進数をパース
 					if(addr > WRAM_SIZE - ITEMS_PER_PAGE * 8 || addr < 0) // ← 範囲チェック追加
 					{
 						app().postMessage(true, "Address out of range");
