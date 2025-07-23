@@ -127,7 +127,7 @@ build_emuframework() {
     
     cd "$EMUFRAMEWORK_PATH"
     
-    make -f "../imagine/make/shortcut/meta-builds/android-arm64-release.mk" install V=1 -j$(nproc)
+    make -f "../imagine/make/shortcut/common-builds/android-arm64-release.mk" install V=1 -j$(nproc)
     
     print_info "EmuFramework built successfully"
 }
@@ -151,8 +151,8 @@ build_snes9x() {
         print_info "Using optimized ARM64 makefile"
     fi
     
-    # Build APK using meta-build makefile
-    local build_cmd="make -f ../imagine/make/shortcut/meta-builds/android-arm64-release.mk android-apk V=1 -j$(nproc)"
+    # Build APK using common-builds makefile
+    local build_cmd="make -f ../imagine/make/shortcut/common-builds/android-arm64-release.mk android-apk V=1 -j$(nproc)"
     
     if [ "$BUILD_TYPE" = "debug" ]; then
         build_cmd="$build_cmd config=debug"

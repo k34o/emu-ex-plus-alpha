@@ -9,11 +9,12 @@ on:
         default: false
         type: boolean
   push:
-    branches: [ master, main ]
+    branches: [ master, main, 'cursor/**' ]
     paths:
       - 'Snes9x/**'
       - 'EmuFramework/**'
       - 'imagine/**'
+      - '.github/workflows/snes9x-arm64-optimized.yml'
   pull_request:
     branches: [ master, main ]
     paths:
@@ -53,6 +54,7 @@ jobs:
         api-level: 34
         build-tools: 34.0.0
         cmake: 3.22.1
+        accept-android-sdk-licenses: true
 
     - name: Setup Android NDK
       uses: nttld/setup-ndk@v1
@@ -116,6 +118,13 @@ jobs:
         android.builder.sdkDownload=false
         EOF
 
+    - name: Setup local.properties
+      run: |
+        # Imagine SDK用のlocal.properties設定
+        mkdir -p imagine/src/base/android/imagine-v9
+        echo "sdk.dir=$ANDROID_HOME" > imagine/src/base/android/imagine-v9/local.properties
+        echo "ndk.dir=$ANDROID_NDK_HOME" >> imagine/src/base/android/imagine-v9/local.properties
+
     - name: Verify environment
       run: |
         echo "Java version:"
@@ -128,7 +137,7 @@ jobs:
         echo "NDK version:"
         cat $ANDROID_NDK_HOME/source.properties | head -3
         echo "Available make files:"
-        ls -la imagine/make/ | head -10
+        ls -la imagine/make/shortcut/common-builds/ | grep android
 
     - name: Build Imagine SDK (ARM64 only)
       run: |
@@ -141,7 +150,7 @@ jobs:
     - name: Build EmuFramework (ARM64)
       run: |
         cd EmuFramework
-        make -f ../imagine/make/shortcut/meta-builds/android-arm64-release.mk install V=1 -j$(nproc)
+        make -f ../imagine/make/shortcut/common-builds/android-arm64-release.mk install V=1 -j$(nproc)
 
     - name: Build Snes9x EX Plus APK (ARM64)
       run: |
@@ -149,7 +158,7 @@ jobs:
         echo "Building Snes9x EX Plus for ARM64..."
         
         # ARM64専用APKビルド
-        make -f ../imagine/make/shortcut/meta-builds/android-arm64-release.mk android-apk V=1 -j$(nproc) \
+        make -f ../imagine/make/shortcut/common-builds/android-arm64-release.mk android-apk V=1 -j$(nproc) \
           ${{ inputs.debug_build == true && 'config=debug' || '' }}
         
         # APKファイルの確認
