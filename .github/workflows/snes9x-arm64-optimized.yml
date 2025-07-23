@@ -103,7 +103,7 @@ jobs:
         EOF
 
     - name: Decode debug keystore
-      if: ${{ secrets.DEBUG_KEYSTORE }}
+      if: ${{ secrets.DEBUG_KEYSTORE != '' }}
       run: |
         echo "${{ secrets.DEBUG_KEYSTORE }}" | base64 --decode > debug.keystore
         sudo mkdir -p /root/.android/
