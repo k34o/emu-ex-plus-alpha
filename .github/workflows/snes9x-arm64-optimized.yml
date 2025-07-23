@@ -138,6 +138,8 @@ jobs:
         cat $ANDROID_NDK_HOME/source.properties | head -3
         echo "Available make files:"
         ls -la imagine/make/shortcut/common-builds/ | grep android
+        echo "Target makefile content:"
+        cat imagine/make/shortcut/common-builds/android-arm64-release.mk
 
     - name: Build Imagine SDK (ARM64 only)
       run: |
