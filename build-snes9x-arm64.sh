@@ -17,6 +17,10 @@ NDK_VERSION=${NDK_VERSION:-"r27-beta2"}
 BUILD_TYPE=${1:-"release"}
 CLEAN_BUILD=${2:-"false"}
 
+# Android SDK setup
+export ANDROID_HOME=${ANDROID_HOME:-"/workspace/android-sdk"}
+export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+
 # Paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_DIR="$SCRIPT_DIR"
@@ -161,9 +165,9 @@ build_snes9x() {
     eval $build_cmd
     
     # Verify and copy APK
-    local apk_path="target/android-release/build/outputs/apk/release/Snes9xEXPlus-release.apk"
+    local apk_path="target/android-arm64-optimized/build/outputs/apk/release/Snes9xEXPlus-release.apk"
     if [ "$BUILD_TYPE" = "debug" ]; then
-        apk_path="target/android-debug/build/outputs/apk/debug/Snes9xEXPlus-debug.apk"
+        apk_path="target/android-arm64-optimized/build/outputs/apk/debug/Snes9xEXPlus-debug.apk"
     fi
     
     if [ -f "$apk_path" ]; then

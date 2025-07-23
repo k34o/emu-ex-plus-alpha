@@ -1,0 +1,34 @@
+# Build artifacts and temporary files
+android-ndk-*/
+android-sdk/
+android-cmdline-tools.zip
+imagine-sdk/
+build/
+target/
+output/
+lib/
+*.apk
+
+# Gradle and Android build files
+.gradle/
+**/build/
+local.properties
+*.aar
+*.jar
+**/intermediates/
+**/outputs/
+**/tmp/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.log
