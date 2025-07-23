@@ -113,6 +113,7 @@ jobs:
           echo "${{ secrets.DEBUG_KEYSTORE }}" | base64 --decode > debug.keystore
           sudo mkdir -p /root/.android/
           sudo cp debug.keystore /root/.android/
+        fi
 
     - name: Build Imagine SDK (ARM64 only)
       run: |
