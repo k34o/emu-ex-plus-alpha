@@ -116,7 +116,8 @@ build_imagine_sdk() {
         exit 1
     fi
     
-    ./makeAll-android-arm64.sh install
+    chmod +x ./runMakefiles.sh
+    ./makeAll-android-arm64.sh install -j$(nproc)
     
     print_info "Imagine SDK built successfully"
 }
@@ -124,11 +125,9 @@ build_imagine_sdk() {
 build_emuframework() {
     print_step "Building EmuFramework (ARM64)..."
     
-    cd "$WORKSPACE_DIR"
+    cd "$EMUFRAMEWORK_PATH"
     
-    make -f "$IMAGINE_PATH/android-release.mk" install V=1 android_arch=arm64
-    make -f "$EMUFRAMEWORK_PATH/android-release.mk" config android_arch=arm64
-    make -f "$EMUFRAMEWORK_PATH/android-release.mk" install V=1 android_arch=arm64
+    make -f "../imagine/make/shortcut/meta-builds/android-arm64-release.mk" install V=1 -j$(nproc)
     
     print_info "EmuFramework built successfully"
 }
@@ -152,8 +151,8 @@ build_snes9x() {
         print_info "Using optimized ARM64 makefile"
     fi
     
-    # Build APK
-    local build_cmd="make -f $makefile android-apk V=1 android_arch=arm64 ANDROID_ABI=arm64-v8a"
+    # Build APK using meta-build makefile
+    local build_cmd="make -f ../imagine/make/shortcut/meta-builds/android-arm64-release.mk android-apk V=1 -j$(nproc)"
     
     if [ "$BUILD_TYPE" = "debug" ]; then
         build_cmd="$build_cmd config=debug"
@@ -164,13 +163,30 @@ build_snes9x() {
     
     eval $build_cmd
     
-    # Verify and copy APK
-    local apk_path="target/android-arm64-optimized/build/outputs/apk/release/Snes9xEXPlus-release.apk"
+    # Verify and copy APK - check multiple possible paths
+    local apk_paths=(
+        "target/android-arm64-release/build/outputs/apk/release/Snes9xEXPlus-release.apk"
+        "target/android-release/build/outputs/apk/release/Snes9xEXPlus-release.apk"
+        "build/outputs/apk/release/Snes9xEXPlus-release.apk"
+    )
+    
     if [ "$BUILD_TYPE" = "debug" ]; then
-        apk_path="target/android-arm64-optimized/build/outputs/apk/debug/Snes9xEXPlus-debug.apk"
+        apk_paths=(
+            "target/android-arm64-release/build/outputs/apk/debug/Snes9xEXPlus-debug.apk"
+            "target/android-release/build/outputs/apk/debug/Snes9xEXPlus-debug.apk"
+            "build/outputs/apk/debug/Snes9xEXPlus-debug.apk"
+        )
     fi
     
-    if [ -f "$apk_path" ]; then
+    local apk_path=""
+    for path in "${apk_paths[@]}"; do
+        if [ -f "$path" ]; then
+            apk_path="$path"
+            break
+        fi
+    done
+    
+    if [ -n "$apk_path" ] && [ -f "$apk_path" ]; then
         local output_dir="$WORKSPACE_DIR/output"
         mkdir -p "$output_dir"
         
@@ -186,9 +202,13 @@ build_snes9x() {
         
         return 0
     else
-        print_error "APK build failed - file not found: $apk_path"
-        print_info "Available APK files:"
-        find target/ -name "*.apk" -type f 2>/dev/null || echo "  None found"
+        print_error "APK build failed - no APK file found"
+        echo "Searched paths:"
+        for path in "${apk_paths[@]}"; do
+            echo "  $path"
+        done
+        echo "Available APK files:"
+        find . -name "*.apk" -type f 2>/dev/null || echo "  No APK files found"
         return 1
     fi
 }
