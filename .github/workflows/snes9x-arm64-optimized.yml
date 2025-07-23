@@ -1,0 +1,210 @@
+name: Snes9x EX Plus ARM64 Optimized Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      debug_build:
+        description: 'Enable debug build'
+        required: false
+        default: false
+        type: boolean
+  push:
+    branches: [ master, main ]
+    paths:
+      - 'Snes9x/**'
+      - 'EmuFramework/**'
+      - 'imagine/**'
+  pull_request:
+    branches: [ master, main ]
+    paths:
+      - 'Snes9x/**'
+      - 'EmuFramework/**'
+      - 'imagine/**'
+
+env:
+  NDK_VERSION: r27-beta2
+  GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.workers.max=4
+
+jobs:
+  build-snes9x-arm64:
+    name: Build Snes9x EX Plus (ARM64)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+        submodules: false
+
+    - name: Setup build environment
+      run: |
+        echo "ANDROID_NDK_PATH=${{ github.workspace }}/android-ndk-${{ env.NDK_VERSION }}" >> $GITHUB_ENV
+        echo "EMUFRAMEWORK_PATH=${{ github.workspace }}/EmuFramework" >> $GITHUB_ENV
+        echo "IMAGINE_PATH=${{ github.workspace }}/imagine" >> $GITHUB_ENV
+        echo "IMAGINE_SDK_PATH=${{ github.workspace }}/imagine-sdk" >> $GITHUB_ENV
+        echo "COMMIT_SHA=$(echo ${{ github.sha }} | cut -c1-8)" >> $GITHUB_ENV
+        echo "BUILD_TIMESTAMP=$(date +%Y%m%d_%H%M%S)" >> $GITHUB_ENV
+        # ARM64専用設定
+        echo "android_arch=arm64" >> $GITHUB_ENV
+        echo "ANDROID_ABI=arm64-v8a" >> $GITHUB_ENV
+
+    - name: Cache Android NDK
+      id: cache-ndk
+      uses: actions/cache@v4
+      with:
+        path: android-ndk-${{ env.NDK_VERSION }}
+        key: android-ndk-${{ env.NDK_VERSION }}-linux
+        restore-keys: |
+          android-ndk-${{ env.NDK_VERSION }}
+
+    - name: Cache Imagine SDK (ARM64)
+      uses: actions/cache@v4
+      with:
+        path: imagine-sdk
+        key: imagine-sdk-arm64-${{ hashFiles('imagine/bundle/all/makeAll-android-arm64.sh', 'imagine/src/**/*.mk') }}
+        restore-keys: |
+          imagine-sdk-arm64-
+
+    - name: Cache Gradle dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+          ~/.gradle/native
+        key: gradle-${{ runner.os }}-snes9x-${{ hashFiles('**/gradle-wrapper.properties', '**/*.gradle*') }}
+        restore-keys: |
+          gradle-${{ runner.os }}-snes9x-
+          gradle-${{ runner.os }}-
+
+    - name: Setup JDK 21
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+        cache: 'gradle'
+
+    - name: Install build dependencies (optimized)
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y --no-install-recommends \
+          autoconf automake autopoint bash clang cmake \
+          file gawk gettext git libtool libtool-bin \
+          llvm make pkg-config unzip wget \
+          build-essential ninja-build ccache
+        
+        # ccacheの設定
+        echo "/usr/lib/ccache" >> $GITHUB_PATH
+        ccache --set-config=max_size=2G
+        ccache --set-config=compression=true
+
+    - name: Download and setup Android NDK
+      if: steps.cache-ndk.outputs.cache-hit != 'true'
+      run: |
+        wget -q "https://dl.google.com/android/repository/android-ndk-${{ env.NDK_VERSION }}-linux.zip"
+        unzip -q android-ndk-${{ env.NDK_VERSION }}-linux.zip
+        rm android-ndk-${{ env.NDK_VERSION }}-linux.zip
+
+    - name: Setup Gradle optimization
+      run: |
+        mkdir -p ~/.gradle
+        cat > ~/.gradle/gradle.properties << EOF
+        org.gradle.daemon=true
+        org.gradle.parallel=true
+        org.gradle.configureondemand=true
+        org.gradle.caching=true
+        org.gradle.workers.max=4
+        android.useAndroidX=true
+        android.enableJetifier=true
+        android.builder.sdkDownload=false
+        EOF
+
+    - name: Decode debug keystore
+      if: ${{ secrets.DEBUG_KEYSTORE }}
+      run: |
+        echo "${{ secrets.DEBUG_KEYSTORE }}" | base64 --decode > debug.keystore
+        sudo mkdir -p /root/.android/
+        sudo cp debug.keystore /root/.android/
+
+    - name: Build Imagine SDK (ARM64 only)
+      run: |
+        mkdir -p imagine-sdk
+        cd imagine/bundle/all
+        chmod +x ./makeAll-android-arm64.sh
+        ./makeAll-android-arm64.sh install -j$(nproc)
+
+    - name: Build EmuFramework (ARM64)
+      run: |
+        make -f $IMAGINE_PATH/android-release.mk install V=1 -j$(nproc) android_arch=arm64
+        make -f $EMUFRAMEWORK_PATH/android-release.mk config -j$(nproc) android_arch=arm64  
+        make -f $EMUFRAMEWORK_PATH/android-release.mk install V=1 -j$(nproc) android_arch=arm64
+
+    - name: Build Snes9x EX Plus APK (ARM64)
+      run: |
+        cd Snes9x
+        echo "Building Snes9x EX Plus for ARM64..."
+        
+        # ARM64専用APKビルド
+        make -f android-release.mk android-apk V=1 -j$(nproc) \
+          android_arch=arm64 \
+          ANDROID_ABI=arm64-v8a \
+          ${{ inputs.debug_build == true && 'config=debug' || '' }}
+        
+        # APKファイルの確認と移動
+        APK_PATH="target/android-release/build/outputs/apk/release/Snes9xEXPlus-release.apk"
+        if [ -f "$APK_PATH" ]; then
+          mkdir -p ../artifacts
+          cp "$APK_PATH" "../artifacts/Snes9xEXPlus-arm64-${COMMIT_SHA}-${BUILD_TIMESTAMP}.apk"
+          echo "✅ APK built successfully: $(ls -lh ../artifacts/)"
+        else
+          echo "❌ APK build failed - file not found: $APK_PATH"
+          find target/ -name "*.apk" -type f || echo "No APK files found"
+          exit 1
+        fi
+
+    - name: Verify APK
+      run: |
+        cd artifacts
+        APK_FILE=$(ls Snes9xEXPlus-arm64-*.apk)
+        echo "APK Info:"
+        echo "File: $APK_FILE"
+        echo "Size: $(du -h $APK_FILE | cut -f1)"
+        
+        # APKの内容確認（aapt2が利用可能な場合）
+        if command -v aapt2 >/dev/null 2>&1; then
+          echo "Architecture info:"
+          aapt2 dump badging $APK_FILE | grep -E "(native-code|platform)" || true
+        fi
+
+    - name: Upload Snes9x EX Plus APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: Snes9xEXPlus-ARM64-${{ env.COMMIT_SHA }}
+        path: artifacts/
+        retention-days: 30
+        compression-level: 6
+
+    - name: Build summary
+      if: always()
+      run: |
+        echo "## 🎮 Snes9x EX Plus ARM64 Build Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commit:** ${{ env.COMMIT_SHA }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Architecture:** ARM64 only" >> $GITHUB_STEP_SUMMARY
+        echo "- **Build Time:** ${{ env.BUILD_TIMESTAMP }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **NDK Version:** ${{ env.NDK_VERSION }}" >> $GITHUB_STEP_SUMMARY
+        
+        if [ -f artifacts/Snes9xEXPlus-arm64-*.apk ]; then
+          APK_SIZE=$(du -h artifacts/Snes9xEXPlus-arm64-*.apk | cut -f1)
+          echo "- **APK Size:** $APK_SIZE" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** ✅ Success" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "- **Status:** ❌ Failed" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: ccache statistics
+      if: always()
+      run: |
+        echo "## 🔧 Build Cache Statistics" >> $GITHUB_STEP_SUMMARY
+        ccache --show-stats >> $GITHUB_STEP_SUMMARY
