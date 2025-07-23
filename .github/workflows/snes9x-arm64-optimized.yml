@@ -1,7 +1,6 @@
 name: Snes9x EX Plus ARM64 Optimized Build
 
 on:
-  push:
   workflow_dispatch:
     inputs:
       debug_build:
