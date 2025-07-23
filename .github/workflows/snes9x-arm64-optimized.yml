@@ -1,25 +1,6 @@
 name: Snes9x EX Plus ARM64 Optimized Build
 
-on:
-  workflow_dispatch:
-    inputs:
-      debug_build:
-        description: 'Enable debug build'
-        required: false
-        default: false
-        type: boolean
-  push:
-    branches: [ cursor/build-snes9x-ex-plus-for-arm64-apk-f864 ]
-    paths:
-      - 'Snes9x/**'
-      - 'EmuFramework/**'
-      - 'imagine/**'
-  pull_request:
-    branches: [ cursor/build-snes9x-ex-plus-for-arm64-apk-f864 ]
-    paths:
-      - 'Snes9x/**'
-      - 'EmuFramework/**'
-      - 'imagine/**'
+on: [push]
 
 env:
   NDK_VERSION: r27-beta2
