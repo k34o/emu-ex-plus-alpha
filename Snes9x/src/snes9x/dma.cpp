@@ -554,6 +554,7 @@ bool8 S9xDoDMA (uint8 Channel)
 			#ifdef DEBUGGER
 				else
 				{
+					char String[96];
 					sprintf(String, "Unknown DMA transfer mode: %d on channel %d\n", d->TransferMode, Channel);
 					S9xMessage(S9X_TRACE, S9X_DMA_TRACE, String);
 				}
@@ -861,6 +862,7 @@ bool8 S9xDoDMA (uint8 Channel)
 			#ifdef DEBUGGER
 				else
 				{
+					char String[96];
 					sprintf(String, "Unknown DMA transfer mode: %d on channel %d\n", d->TransferMode, Channel);
 					S9xMessage(S9X_TRACE, S9X_DMA_TRACE, String);
 				}
@@ -993,6 +995,7 @@ bool8 S9xDoDMA (uint8 Channel)
 
 					default:
 					#ifdef DEBUGGER
+						char String[96];
 						sprintf(String, "Unknown DMA transfer mode: %d on channel %d\n", d->TransferMode, Channel);
 						S9xMessage(S9X_TRACE, S9X_DMA_TRACE, String);
 					#endif
@@ -1094,6 +1097,7 @@ bool8 S9xDoDMA (uint8 Channel)
 
 					default:
 					#ifdef DEBUGGER
+						char String[96];
 						sprintf(String, "Unknown DMA transfer mode: %d on channel %d\n", d->TransferMode, Channel);
 						S9xMessage(S9X_TRACE, S9X_DMA_TRACE, String);
 					#endif
@@ -1297,6 +1301,7 @@ uint8 S9xDoHDMA (uint8 byte)
 			#ifdef DEBUGGER
 				if (Settings.TraceHDMA && p->DoTransfer)
 				{
+					char String[96];
 					sprintf(String, "H-DMA[%d] %s (%d) 0x%06X->0x21%02X %s, Count: %3d, Rep: %s, V-LINE: %3ld %02X%04X",
 							p-DMA, p->ReverseTransfer? "read" : "write",
 							p->TransferMode, ShiftedIBank+IAddr, p->BAddress,
