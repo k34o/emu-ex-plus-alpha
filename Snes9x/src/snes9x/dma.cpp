@@ -98,7 +98,7 @@ bool8 S9xDoDMA (uint8 Channel)
 	#ifdef DEBUGGER
 		if (Settings.TraceDMA)
 		{
-			char String[96];
+			char String[256];
 			sprintf(String, "DMA[%d]: WRAM Bank:%02X->$2180", Channel, d->ABank);
 			S9xMessage(S9X_TRACE, S9X_DMA_TRACE, String);
 		}
@@ -150,6 +150,7 @@ bool8 S9xDoDMA (uint8 Channel)
 		#ifdef DEBUGGER
 			else
 			{
+				char String[96];
 				sprintf(String, "S-DD1: DMA from non-block address $%02X:%04X", d->ABank, d->AAddress);
 				S9xMessage(S9X_WARNING, S9X_DMA_TRACE, String);
 			}
@@ -323,6 +324,7 @@ bool8 S9xDoDMA (uint8 Channel)
 #ifdef DEBUGGER
 	if (Settings.TraceDMA)
 	{
+		char String[256];
 		sprintf(String, "DMA[%d]: %s Mode:%d 0x%02X%04X->0x21%02X Bytes:%d (%s) V:%03d",
 			Channel, d->ReverseTransfer ? "PPU->CPU" : "CPU->PPU", d->TransferMode, d->ABank, d->AAddress, d->BAddress,
 			d->TransferBytes, d->AAddressFixed ? "fixed" : (d->AAddressDecrement ? "dec" : "inc"), CPU.V_Counter);
