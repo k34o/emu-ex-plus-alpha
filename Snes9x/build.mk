@@ -65,7 +65,8 @@ apu/apu.cpp \
 apu/bapu/dsp/sdsp.cpp \
 apu/bapu/smp/smp.cpp \
 apu/bapu/smp/smp_state.cpp \
-debug.cpp
+debug.cpp \
+fscompat.cpp
 
 SRC += \
 main/Main.cc \
