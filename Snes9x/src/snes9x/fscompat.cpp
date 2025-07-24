@@ -247,3 +247,8 @@ void _makepath(char *path, const char *drive, const char *dir, const char *fname
 }
 #endif
 #endif
+
+std::string S9xGetDirectory(enum s9x_getdirtype)
+{
+    return ".";
+}
