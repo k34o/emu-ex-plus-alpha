@@ -25,6 +25,7 @@
 #include <imagine/gfx/RendererCommands.hh>
 #include <imagine/util/variant.hh>
 #include <format>
+#include <emuframework/AppKeyCode.hh>
 
 namespace EmuEx
 {
@@ -39,9 +40,8 @@ EmuInputView::EmuInputView(ViewAttachParams attach, VController &vCtrl, EmuVideo
 	// デバッグ用ブレイク・ステップボタンをUIボタン群に追加
 	if (!vController->guiElements().empty()) {
 		auto &uiGroup = vController->guiElements().front();
-		auto &buttons = uiGroup.buttons();
-		buttons.emplace_back(appKeys.breakDebug);
-		buttons.emplace_back(appKeys.stepDebug);
+		uiGroup.add(appKeys.breakDebug);
+		uiGroup.add(appKeys.stepDebug);
 	}
 }
 
