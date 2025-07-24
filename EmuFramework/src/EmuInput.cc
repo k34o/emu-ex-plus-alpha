@@ -24,6 +24,9 @@
 #include <emuframework/EmuOptions.hh>
 #include <imagine/logger/logger.h>
 
+extern "C" void S9xDoDebug();
+extern "C" void S9xTrace();
+
 namespace EmuEx
 {
 
@@ -224,7 +227,6 @@ bool InputManager::handleAppActionKeyInput(EmuApp& app, InputAction action, cons
 		{
 			if(!isPushed)
 				break;
-			extern "C" void S9xDoDebug();
 			S9xDoDebug();
 			return true;
 		}
@@ -232,7 +234,6 @@ bool InputManager::handleAppActionKeyInput(EmuApp& app, InputAction action, cons
 		{
 			if(!isPushed)
 				break;
-			extern "C" void S9xTrace();
 			S9xTrace();
 			return true;
 		}
