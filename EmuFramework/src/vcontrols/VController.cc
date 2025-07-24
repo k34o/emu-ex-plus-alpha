@@ -103,8 +103,8 @@ static void updateTexture(const EmuApp &app, VControllerElement &e, Gfx::Rendere
 						case softReset:
 						case hardReset:
 						case resetMenu: return app.asset(AssetID::arrow);
+						default: return app.asset(AssetID::more);
 					}
-					return app.asset(AssetID::more);
 				}());
 			}
 			grp.setTask(task);
