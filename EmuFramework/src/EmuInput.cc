@@ -224,7 +224,6 @@ bool InputManager::handleAppActionKeyInput(EmuApp& app, InputAction action, cons
 		{
 			if(!isPushed)
 				break;
-			// Snes9xデバッグブレイク
 			extern "C" void S9xDoDebug();
 			S9xDoDebug();
 			return true;
@@ -233,7 +232,6 @@ bool InputManager::handleAppActionKeyInput(EmuApp& app, InputAction action, cons
 		{
 			if(!isPushed)
 				break;
-			// Snes9xデバッグステップ
 			extern "C" void S9xTrace();
 			S9xTrace();
 			return true;
