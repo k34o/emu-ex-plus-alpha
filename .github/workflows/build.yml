@@ -1,6 +1,9 @@
 name: EX Emulators
 
-on: 
+on:
+  push:
+    branches:
+      - cursor/build-snes9x-es-plus-with-debugger-enabled-ab82
   workflow_dispatch:
 
 jobs:
