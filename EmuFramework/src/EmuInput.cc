@@ -220,6 +220,24 @@ bool InputManager::handleAppActionKeyInput(EmuApp& app, InputAction action, cons
 			viewController.pushAndShowModal(resetAlertView(app.attachParams(), app), srcEvent, false);
 		}
 		break;
+		case breakDebug:
+		{
+			if(!isPushed)
+				break;
+			// Snes9xデバッグブレイク
+			extern "C" void S9xDoDebug();
+			S9xDoDebug();
+			return true;
+		}
+		case stepDebug:
+		{
+			if(!isPushed)
+				break;
+			// Snes9xデバッグステップ
+			extern "C" void S9xTrace();
+			S9xTrace();
+			return true;
+		}
 	}
 	return false;
 }

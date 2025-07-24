@@ -34,7 +34,16 @@ EmuInputView::EmuInputView() {}
 EmuInputView::EmuInputView(ViewAttachParams attach, VController &vCtrl, EmuVideoLayer &videoLayer):
 	View(attach),
 	vController{&vCtrl},
-	videoLayer{&videoLayer} {}
+	videoLayer{&videoLayer}
+{
+	// デバッグ用ブレイク・ステップボタンをUIボタン群に追加
+	if (!vController->guiElements().empty()) {
+		auto &uiGroup = vController->guiElements().front();
+		auto &buttons = uiGroup.buttons();
+		buttons.emplace_back(appKeys.breakDebug);
+		buttons.emplace_back(appKeys.stepDebug);
+	}
+}
 
 void EmuInputView::draw(Gfx::RendererCommands&__restrict__ cmds, ViewDrawParams) const
 {
