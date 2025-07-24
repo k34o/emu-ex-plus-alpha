@@ -46,6 +46,8 @@ enum class AppKeyCode : KeyCode
 	hardReset,
 	resetMenu,
 	closeContent,
+	breakDebug, // デバッグブレイク
+	stepDebug   // デバッグステップ
 };
 
 constexpr struct AppKeys
@@ -69,7 +71,9 @@ constexpr struct AppKeys
 	softReset = KeyInfo::appKey(AppKeyCode::softReset),
 	hardReset = KeyInfo::appKey(AppKeyCode::hardReset),
 	resetMenu = KeyInfo::appKey(AppKeyCode::resetMenu),
-	exitApp = KeyInfo::appKey(AppKeyCode::exitApp);
+	exitApp = KeyInfo::appKey(AppKeyCode::exitApp),
+	breakDebug = KeyInfo::appKey(AppKeyCode::breakDebug),
+	stepDebug = KeyInfo::appKey(AppKeyCode::stepDebug);
 
 	constexpr const KeyInfo *data() const { return &openMenu; }
 	static constexpr size_t size() { return sizeof(AppKeys) / sizeof(KeyInfo); }
