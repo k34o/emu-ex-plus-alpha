@@ -689,8 +689,8 @@ std::string_view toString(AppKeyCode code)
 		case AppKeyCode::softReset: return "Soft Reset";
 		case AppKeyCode::hardReset: return "Hard Reset";
 		case AppKeyCode::resetMenu: return "Open Reset Menu";
-	};
-	return "";
+		default: return "";
+	}
 }
 
 }
