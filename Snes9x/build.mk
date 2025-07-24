@@ -11,7 +11,8 @@ CPPFLAGS += \
 -DHAVE_STRINGS_H \
 -DHAVE_STDINT_H \
 -DRIGHTSHIFT_IS_SAR \
--DZLIB
+-DZLIB \
+-DDEBUGGER
 
 CXXFLAGS_WARN += -Wno-register -Wno-implicit-fallthrough
 
@@ -63,7 +64,8 @@ tileimpl-n2x1.cpp \
 apu/apu.cpp \
 apu/bapu/dsp/sdsp.cpp \
 apu/bapu/smp/smp.cpp \
-apu/bapu/smp/smp_state.cpp
+apu/bapu/smp/smp_state.cpp \
+debug.cpp
 
 SRC += \
 main/Main.cc \
