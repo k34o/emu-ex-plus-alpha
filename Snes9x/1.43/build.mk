@@ -17,7 +17,8 @@ CPPFLAGS += \
 -DSDD1_DECOMP \
 -DNOASM \
 -DPIXEL_FORMAT=RGB565 \
--DSNES9X_VERSION_1_4
+-DSNES9X_VERSION_1_4 \
+-DDEBUGGER
 # -DNO_INLINE_SET_GET
 
 CXXFLAGS_WARN += -Wno-register -Wno-implicit-fallthrough
@@ -57,7 +58,8 @@ srtc.cpp \
 tile.cpp \
 spc700.cpp \
 soundux.cpp \
-apu.cpp
+apu.cpp \
+debug.cpp
 
 SRC += \
 main/Main.cc \
