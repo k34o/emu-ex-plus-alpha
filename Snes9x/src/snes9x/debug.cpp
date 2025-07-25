@@ -3,7 +3,7 @@
                 This file is licensed under the Snes9x License.
    For further information, consult the LICENSE file in the root directory.
 \*****************************************************************************/
-
+#define DEBUGGER
 #ifdef DEBUGGER
 
 #include <stdarg.h>
