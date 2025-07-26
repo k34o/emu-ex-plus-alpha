@@ -46,6 +46,8 @@ enum class AppKeyCode : KeyCode
 	hardReset,
 	resetMenu,
 	closeContent,
+	stepFrame,
+	breakEmulation,
 };
 
 constexpr struct AppKeys
@@ -69,7 +71,9 @@ constexpr struct AppKeys
 	softReset = KeyInfo::appKey(AppKeyCode::softReset),
 	hardReset = KeyInfo::appKey(AppKeyCode::hardReset),
 	resetMenu = KeyInfo::appKey(AppKeyCode::resetMenu),
-	exitApp = KeyInfo::appKey(AppKeyCode::exitApp);
+	exitApp = KeyInfo::appKey(AppKeyCode::exitApp),
+	stepFrame = KeyInfo::appKey(AppKeyCode::stepFrame),
+	breakEmulation = KeyInfo::appKey(AppKeyCode::breakEmulation);
 
 	constexpr const KeyInfo *data() const { return &openMenu; }
 	static constexpr size_t size() { return sizeof(AppKeys) / sizeof(KeyInfo); }
@@ -112,10 +116,14 @@ constexpr std::array genericKeyboardAppKeyCodeMap
 constexpr std::array rightUIKeys{appKeys.openMenu};
 constexpr std::array leftUIKeys{appKeys.toggleFastForward};
 constexpr std::array rewindUIKeys{appKeys.rewind};
+constexpr std::array stepUIKeys{appKeys.stepFrame};
+constexpr std::array breakUIKeys{appKeys.breakEmulation};
 
 constexpr InputComponentDesc rightUIComponents{"Open Menu", rightUIKeys, InputComponent::ui, RT2DO};
 constexpr InputComponentDesc leftUIComponents{"Toggle Fast-forward", leftUIKeys, InputComponent::ui, LT2DO};
 constexpr InputComponentDesc rewindUIComponents{"Rewind One State", rewindUIKeys, InputComponent::ui, LT2DO};
+constexpr InputComponentDesc stepUIComponents{"Step Frame", stepUIKeys, InputComponent::ui, RB2DO};
+constexpr InputComponentDesc breakUIComponents{"Break/Pause", breakUIKeys, InputComponent::ui, CB2DO};
 
 std::string_view toString(AppKeyCode);
 

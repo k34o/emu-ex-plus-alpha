@@ -936,6 +936,9 @@ std::vector<VControllerElement> VController::defaultUIGroups() const
 	add(uiElements, rightUIComponents);
 	if(Config::Input::TOUCH_DEVICES)
 		add(uiElements, leftUIComponents);
+	add(uiElements, rewindUIComponents);
+	add(uiElements, breakUIComponents);
+	add(uiElements, stepUIComponents);
 	if(hasWindow())
 		resetUIPositions(uiElements);
 	return uiElements;

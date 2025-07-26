@@ -220,6 +220,38 @@ bool InputManager::handleAppActionKeyInput(EmuApp& app, InputAction action, cons
 			viewController.pushAndShowModal(resetAlertView(app.attachParams(), app), srcEvent, false);
 		}
 		break;
+		case breakEmulation:
+		{
+			if(!isPushed)
+				break;
+			// Toggle pause/resume of emulation
+			if(system.isPaused())
+			{
+				app.startEmulation();
+			}
+			else
+			{
+				app.pauseEmulation();
+			}
+			return true;
+		}
+		break;
+		case stepFrame:
+		{
+			if(!isPushed)
+				break;
+			// Advance a single frame when emulation is paused
+			if(system.isPaused())
+			{
+				auto suspendCtx = app.suspendEmulationThread();
+				// Run exactly one frame without audio (to avoid stutter)
+				app.runFrames({}, &app.video, nullptr, 1);
+				// Ensure the frame is presented
+				app.viewController().emuWindow().drawNow();
+				return true;
+			}
+		}
+		break;
 	}
 	return false;
 }
@@ -672,6 +704,8 @@ std::string_view toString(AppKeyCode code)
 		case AppKeyCode::softReset: return "Soft Reset";
 		case AppKeyCode::hardReset: return "Hard Reset";
 		case AppKeyCode::resetMenu: return "Open Reset Menu";
+		case AppKeyCode::breakEmulation: return "Break Emulation";
+		case AppKeyCode::stepFrame: return "Step Frame";
 	};
 	return "";
 }
