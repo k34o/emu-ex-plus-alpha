@@ -11,7 +11,8 @@ CPPFLAGS += \
 -DHAVE_STRINGS_H \
 -DHAVE_STDINT_H \
 -DRIGHTSHIFT_IS_SAR \
--DZLIB
+-DZLIB \
+-DDBUGGER
 
 CXXFLAGS_WARN += -Wno-register -Wno-implicit-fallthrough
 
