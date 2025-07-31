@@ -28,6 +28,7 @@ controls.cpp \
 cpu.cpp \
 cpuexec.cpp \
 cpuops.cpp \
+debug.cpp \
 dma.cpp \
 dsp.cpp \
 dsp1.cpp \
