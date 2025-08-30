@@ -371,33 +371,44 @@ class WRAMViewerView : public TableView, public MainAppHelper
 	std::array<DualTextMenuItem, ITEMS_PER_PAGE> wramItems;
 
 	// 16進数パターンをパースする関数
-	std::vector<uint8> parseHexPattern(const char* str)
-	{
-		std::vector<uint8> pattern;
-		std::string input(str);
-		
-		// スペースで区切られた16進数値を解析
-		std::istringstream iss(input);
-		std::string token;
-		
-		while(iss >> token)
-		{
-			// 16進数として解析
-			char* endptr;
-			unsigned long val = strtoul(token.c_str(), &endptr, 16);
-			
-			// 有効な16進数かチェック
-			if(*endptr != '\0' || val > 0xFF)
-			{
-				return {}; // 無効なパターン
-			}
-			
-			pattern.push_back(static_cast<uint8>(val));
-		}
-		
-		return pattern;
+	std::vector<uint8> parseHexPattern(const char* str)  
+	{  
+	    std::vector<uint8> pattern;  
+	    std::string input(str);  
+	      
+	    // 空白文字を除去  
+	    input.erase(std::remove_if(input.begin(), input.end(), ::isspace), input.end());  
+	      
+	    // 文字列が空の場合はエラー  
+	    if(input.empty())  
+	    {  
+	        return {}; // 無効なパターン  
+	    }  
+	      
+	    // 文字列の長さが奇数の場合は先頭に0を追加してパディング  
+	    if(input.length() % 2 != 0)  
+	    {  
+	        input = "0" + input;  
+	    }  
+	      
+	    // 2文字ずつ処理して16進数バイトに変換  
+	    for(size_t i = 0; i < input.length(); i += 2)  
+	    {  
+	        std::string byteStr = input.substr(i, 2);  
+	        char* endptr;  
+	        unsigned long val = strtoul(byteStr.c_str(), &endptr, 16);  
+	          
+	        // 有効な16進数かチェック  
+	        if(*endptr != '\0' || val > 0xFF)  
+	        {  
+	            return {}; // 無効なパターン  
+	        }  
+	          
+	        pattern.push_back(static_cast<uint8>(val));  
+	    }  
+	      
+	    return pattern;  
 	}
-
 	// 複数バイトパターン検索の実装
 	void performPatternSearch(const std::vector<uint8>& pattern)
 	{
@@ -451,52 +462,58 @@ class WRAMViewerView : public TableView, public MainAppHelper
 			currentSearchIndex + 1, searchResults.size(), targetAddr));
 	}
 
-	void updateDisplay()
-	{
-		if(!system().hasContent()) return;
-
-		addressRange.set2ndName(std::format("${:06X} - ${:06X}",
-			currentAddress, currentAddress + (ITEMS_PER_PAGE * 8) - 1));
-
-		for(size_t i = 0; i < ITEMS_PER_PAGE && (currentAddress + i * 8) < WRAM_INIT_ADDRESS + WRAM_SIZE; i++)
-		{
-			size_t addr = currentAddress + i * 8;
-			std::string addrStr = ((addr & 0xF) == 0) ? std::format("${:06X}:", addr) : "";
-			std::string dataStr;
-
-			for(int j = 0; j < 8 && (addr + j) < WRAM_INIT_ADDRESS + WRAM_SIZE; j++)
-			{
-				size_t physicalAddr = (addr + j) - WRAM_INIT_ADDRESS;
-				uint8 value = Memory.RAM[physicalAddr];
-				
-				// 検索結果のハイライト表示（パターンマッチング）
-				bool isSearchResult = isPartOfSearchPattern(addr + j);
-				
-				if(showHex)
-				{
-					if(isSearchResult)
-						dataStr += std::format("[{:02X}] ", value);
-					else
-						dataStr += std::format("{:02X} ", value);
-				}
-				else
-				{
-					if(isSearchResult)
-						dataStr += std::format("[{:3d}] ", value);
-					else
-						dataStr += std::format("{:3d} ", value);
-				}
-			}
-
-			wramItems[i].compile(addrStr);
-			wramItems[i].set2ndName(dataStr);
-			wramItems[i].place();
-		}
-
-		displayMode.set2ndName(showHex ? "Hex" : "Dec");
-		displayMode.place();
+	void updateDisplay()  
+	{  
+	    if(!system().hasContent()) return;  
+	  
+	    addressRange.set2ndName(std::format("${:06X} - ${:06X}",  
+	        currentAddress, currentAddress + (ITEMS_PER_PAGE * 8) - 1));  
+	  
+	    for(size_t i = 0; i < ITEMS_PER_PAGE && (currentAddress + i * 8) < WRAM_INIT_ADDRESS + WRAM_SIZE; i++)  
+	    {  
+	        size_t addr = currentAddress + i * 8;  
+	        std::string addrStr = ((addr & 0xF) == 0) ? std::format("${:06X}:", addr) : "";  
+	        std::string dataStr;  
+	        bool hasSearchResult = false;  
+	  
+	        for(int j = 0; j < 8 && (addr + j) < WRAM_INIT_ADDRESS + WRAM_SIZE; j++)  
+	        {  
+	            size_t physicalAddr = (addr + j) - WRAM_INIT_ADDRESS;  
+	            uint8 value = Memory.RAM[physicalAddr];  
+	              
+	            // 検索結果のチェック  
+	            bool isSearchResult = isPartOfSearchPattern(addr + j);  
+	            if(isSearchResult) hasSearchResult = true;  
+	              
+	            if(showHex)  
+	            {  
+	                dataStr += std::format("{:02X} ", value);  
+	            }  
+	            else  
+	            {  
+	                dataStr += std::format("{:3d} ", value);  
+	            }  
+	        }  
+	  
+	        wramItems[i].compile(addrStr);  
+	        wramItems[i].set2ndName(dataStr);  
+	          
+	        // 検索結果がある場合は色を設定  
+	        if(hasSearchResult)  
+	        {  
+	            wramItems[i].text2Color = Gfx::Color{1.0f, 0.0f, 0.0f}; // 赤色  
+	        }  
+	        else  
+	        {  
+	            wramItems[i].text2Color = Gfx::Color{}; // デフォルト色  
+	        }  
+	          
+	        wramItems[i].place();  
+	    }  
+	  
+	    displayMode.set2ndName(showHex ? "Hex" : "Dec");  
+	    displayMode.place();  
 	}
-
 	// 指定されたアドレスが検索パターンの一部かどうかをチェック
 	bool isPartOfSearchPattern(size_t addr)
 	{
