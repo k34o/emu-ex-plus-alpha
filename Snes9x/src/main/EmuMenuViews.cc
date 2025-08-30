@@ -273,6 +273,7 @@ public:
 	{}
 };
 
+
 class WRAMViewerView : public TableView, public MainAppHelper
 {
 	using MainAppHelper::system;
@@ -287,7 +288,7 @@ class WRAMViewerView : public TableView, public MainAppHelper
 	// 検索機能用の新しいメンバー変数
 	std::vector<size_t> searchResults;
 	size_t currentSearchIndex = 0;
-	uint8 lastSearchValue = 0;
+	std::vector<uint8> searchPattern; // 複数バイト検索用
 
 	TextHeadingMenuItem addressHeading{"Address Range", attachParams()};
 
@@ -326,23 +327,23 @@ class WRAMViewerView : public TableView, public MainAppHelper
 		}
 	};
 
-	// 新しい検索機能のメニューアイテム
+	// 複数バイト検索機能のメニューアイテム
 	TextMenuItem searchItem
 	{
-		"Search Value", attachParams(),
+		"Search Pattern", attachParams(),
 		[this](Input::Event e)
 		{
 			pushAndShowNewCollectValueInputView<const char*>(attachParams(), e,
-				"Enter hex value to search", "",
+				"Enter values (hex)", "",
 				[this](CollectTextInputView&, auto str)
 				{
-					unsigned searchValue = strtoul(str, nullptr, 16);
-					if(searchValue > 0xFF)
+					std::vector<uint8> pattern = parseHexPattern(str);
+					if(pattern.empty())
 					{
-						app().postMessage(true, "Value must be <= FF");
+						app().postMessage(true, "Invalid hex pattern");
 						return false;
 					}
-					performSearch(static_cast<uint8>(searchValue));
+					performPatternSearch(pattern);
 					return true;
 				});
 		}
@@ -369,18 +370,56 @@ class WRAMViewerView : public TableView, public MainAppHelper
 
 	std::array<DualTextMenuItem, ITEMS_PER_PAGE> wramItems;
 
-	// 検索機能の実装
-	void performSearch(uint8 value)
+	// 16進数パターンをパースする関数
+	std::vector<uint8> parseHexPattern(const char* str)
 	{
-		if(!system().hasContent()) return;
+		std::vector<uint8> pattern;
+		std::string input(str);
+		
+		// スペースで区切られた16進数値を解析
+		std::istringstream iss(input);
+		std::string token;
+		
+		while(iss >> token)
+		{
+			// 16進数として解析
+			char* endptr;
+			unsigned long val = strtoul(token.c_str(), &endptr, 16);
+			
+			// 有効な16進数かチェック
+			if(*endptr != '\0' || val > 0xFF)
+			{
+				return {}; // 無効なパターン
+			}
+			
+			pattern.push_back(static_cast<uint8>(val));
+		}
+		
+		return pattern;
+	}
+
+	// 複数バイトパターン検索の実装
+	void performPatternSearch(const std::vector<uint8>& pattern)
+	{
+		if(!system().hasContent() || pattern.empty()) return;
 		
 		searchResults.clear();
-		lastSearchValue = value;
+		searchPattern = pattern;
 		
-		// WRAM全体を検索
-		for(size_t addr = 0; addr < WRAM_SIZE; addr++)
+		// WRAM全体でパターンを検索
+		for(size_t addr = 0; addr <= WRAM_SIZE - pattern.size(); addr++)
 		{
-			if(Memory.RAM[addr] == value)
+			bool match = true;
+			for(size_t i = 0; i < pattern.size(); i++)
+			{
+				if(Memory.RAM[addr + i] != pattern[i])
+				{
+					match = false;
+					break;
+				}
+			}
+			
+			if(match)
 			{
 				searchResults.push_back(WRAM_INIT_ADDRESS + addr);
 			}
@@ -388,7 +427,7 @@ class WRAMViewerView : public TableView, public MainAppHelper
 		
 		if(searchResults.empty())
 		{
-			app().postMessage(false, "Value not found");
+			app().postMessage(false, "Pattern not found");
 		}
 		else
 		{
@@ -430,8 +469,8 @@ class WRAMViewerView : public TableView, public MainAppHelper
 				size_t physicalAddr = (addr + j) - WRAM_INIT_ADDRESS;
 				uint8 value = Memory.RAM[physicalAddr];
 				
-				// 検索結果のハイライト表示
-				bool isSearchResult = std::find(searchResults.begin(), searchResults.end(), addr + j) != searchResults.end();
+				// 検索結果のハイライト表示（パターンマッチング）
+				bool isSearchResult = isPartOfSearchPattern(addr + j);
 				
 				if(showHex)
 				{
@@ -456,6 +495,21 @@ class WRAMViewerView : public TableView, public MainAppHelper
 
 		displayMode.set2ndName(showHex ? "Hex" : "Dec");
 		displayMode.place();
+	}
+
+	// 指定されたアドレスが検索パターンの一部かどうかをチェック
+	bool isPartOfSearchPattern(size_t addr)
+	{
+		if(searchPattern.empty()) return false;
+		
+		for(size_t resultAddr : searchResults)
+		{
+			if(addr >= resultAddr && addr < resultAddr + searchPattern.size())
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	std::unique_ptr<TableView> makeByteSelectionView(size_t baseAddr)  
@@ -548,7 +602,7 @@ public:
 		menuItems[0] = &addressHeading;
 		menuItems[1] = &addressRange;
 		menuItems[2] = &displayMode;
-		menuItems[3] = &searchItem;      // 新しい検索機能
+		menuItems[3] = &searchItem;      // 新しいパターン検索機能
 		menuItems[4] = &nextResult;      // 新しい次の結果機能
 		menuItems[5] = &dataHeading;
 
