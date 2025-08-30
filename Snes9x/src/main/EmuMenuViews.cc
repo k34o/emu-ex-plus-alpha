@@ -341,9 +341,9 @@ class WRAMViewerView : public TableView, public MainAppHelper
 		attachParams(),
 		[this](Input::Event e)
 		{
-			pushAndShowNewCollectValueInputView<const char*>(attachParams(), e,
+			pushAndShowNewCollectTextInputView(attachParams(), e,
 				"Enter Value (hex)", std::format("{:02X}", searchValue),
-				[this](CollectTextInputView&, auto str)
+				[this](CollectTextInputView&, const char* str)
 				{
 					unsigned val = strtoul(str, nullptr, 16);
 					if(val > 0xFF)
@@ -353,7 +353,7 @@ class WRAMViewerView : public TableView, public MainAppHelper
 					}
 					searchValue = static_cast<uint8_t>(val);
 					searchValueItem.set2ndName(std::format("{:02X}", searchValue));
-					return false;
+					return true;
 				});
 		}
 	};
