@@ -283,6 +283,11 @@ class WRAMViewerView : public TableView, public MainAppHelper
 
 	size_t currentAddress = WRAM_INIT_ADDRESS;
 	bool showHex = true;
+	
+	// 検索機能用の新しいメンバー変数
+	std::vector<size_t> searchResults;
+	size_t currentSearchIndex = 0;
+	uint8 lastSearchValue = 0;
 
 	TextHeadingMenuItem addressHeading{"Address Range", attachParams()};
 
@@ -297,8 +302,8 @@ class WRAMViewerView : public TableView, public MainAppHelper
 				"Enter Address (hex)", std::format("{:X}", currentAddress),
 				[this](CollectTextInputView&, auto str)
 				{
-					unsigned addr = strtoul(str, nullptr, 16); // ← parseHex()で16進数をパース
-					if(addr > WRAM_INIT_ADDRESS + WRAM_SIZE  - ITEMS_PER_PAGE * 8 || addr < 0x7e0000) // ← 範囲チェック追加
+					unsigned addr = strtoul(str, nullptr, 16);
+					if(addr > WRAM_INIT_ADDRESS + WRAM_SIZE  - ITEMS_PER_PAGE * 8 || addr < 0x7e0000)
 					{
 						app().postMessage(true, "Address out of range");
 						return false;
@@ -321,9 +326,91 @@ class WRAMViewerView : public TableView, public MainAppHelper
 		}
 	};
 
+	// 新しい検索機能のメニューアイテム
+	TextMenuItem searchItem
+	{
+		"Search Value", attachParams(),
+		[this](Input::Event e)
+		{
+			pushAndShowNewCollectValueInputView<const char*>(attachParams(), e,
+				"Enter hex value to search", "",
+				[this](CollectTextInputView&, auto str)
+				{
+					unsigned searchValue = strtoul(str, nullptr, 16);
+					if(searchValue > 0xFF)
+					{
+						app().postMessage(true, "Value must be <= FF");
+						return false;
+					}
+					performSearch(static_cast<uint8>(searchValue));
+					return true;
+				});
+		}
+	};
+
+	TextMenuItem nextResult
+	{
+		"Next Result", attachParams(),
+		[this](Input::Event e)
+		{
+			if(!searchResults.empty())
+			{
+				currentSearchIndex = (currentSearchIndex + 1) % searchResults.size();
+				jumpToSearchResult();
+			}
+			else
+			{
+				app().postMessage(false, "No search results available");
+			}
+		}
+	};
+
 	TextHeadingMenuItem dataHeading{"WRAM Data", attachParams()};
 
 	std::array<DualTextMenuItem, ITEMS_PER_PAGE> wramItems;
+
+	// 検索機能の実装
+	void performSearch(uint8 value)
+	{
+		if(!system().hasContent()) return;
+		
+		searchResults.clear();
+		lastSearchValue = value;
+		
+		// WRAM全体を検索
+		for(size_t addr = 0; addr < WRAM_SIZE; addr++)
+		{
+			if(Memory.RAM[addr] == value)
+			{
+				searchResults.push_back(WRAM_INIT_ADDRESS + addr);
+			}
+		}
+		
+		if(searchResults.empty())
+		{
+			app().postMessage(false, "Value not found");
+		}
+		else
+		{
+			currentSearchIndex = 0;
+			app().postMessage(false, std::format("Found {} results", searchResults.size()));
+			jumpToSearchResult();
+		}
+	}
+	
+	void jumpToSearchResult()
+	{
+		if(searchResults.empty()) return;
+		
+		size_t targetAddr = searchResults[currentSearchIndex];
+		// 8バイト境界に合わせる
+		currentAddress = targetAddr & ~7;
+		updateDisplay();
+		
+		// 見つかった結果をハイライト
+		app().postMessage(false, std::format("Result {}/{} at ${:06X}", 
+			currentSearchIndex + 1, searchResults.size(), targetAddr));
+	}
 
 	void updateDisplay()
 	{
@@ -342,13 +429,23 @@ class WRAMViewerView : public TableView, public MainAppHelper
 			{
 				size_t physicalAddr = (addr + j) - WRAM_INIT_ADDRESS;
 				uint8 value = Memory.RAM[physicalAddr];
+				
+				// 検索結果のハイライト表示
+				bool isSearchResult = std::find(searchResults.begin(), searchResults.end(), addr + j) != searchResults.end();
+				
 				if(showHex)
 				{
-					dataStr += std::format("{:02X} ", value);
+					if(isSearchResult)
+						dataStr += std::format("[{:02X}] ", value);
+					else
+						dataStr += std::format("{:02X} ", value);
 				}
 				else
 				{
-					dataStr += std::format("{:3d} ", value);
+					if(isSearchResult)
+						dataStr += std::format("[{:3d}] ", value);
+					else
+						dataStr += std::format("{:3d} ", value);
 				}
 			}
 
@@ -361,10 +458,8 @@ class WRAMViewerView : public TableView, public MainAppHelper
 		displayMode.place();
 	}
 
-
 	std::unique_ptr<TableView> makeByteSelectionView(size_t baseAddr)  
 	{  
-		// 8バイト分のTextMenuItemを動的に作成  
 		auto byteItems = std::make_shared<std::array<TextMenuItem, 8>>();  
 		  
 		for(int j = 0; j < 8; j++)  
@@ -379,7 +474,7 @@ class WRAMViewerView : public TableView, public MainAppHelper
 			{
 				std::format("${:06X}: {:02X}", byteAddr, value),
 				attachParams(),
-				[this, byteAddr](Input::Event e)  // Only capture byteAddr  
+				[this, byteAddr](Input::Event e)
 				{
 					size_t physicalAddr = byteAddr - WRAM_INIT_ADDRESS;
 					uint8 currentValue = Memory.RAM[physicalAddr];
@@ -387,7 +482,7 @@ class WRAMViewerView : public TableView, public MainAppHelper
 					pushAndShowNewCollectValueInputView<const char*>(attachParams(), e,
 						std::format("Edit Address ${:06X} (hex)", byteAddr), 
 						std::format("{:02X}", currentValue),
-						[this, byteAddr](CollectTextInputView&, auto str)  // Minimal capture  
+						[this, byteAddr](CollectTextInputView&, auto str)
 						{
 							unsigned val = strtoul(str, nullptr, 16);  
 							if(val > 0xFF)
@@ -399,12 +494,10 @@ class WRAMViewerView : public TableView, public MainAppHelper
 							if(physicalAddr < WRAM_SIZE)
 							{
 								Memory.RAM[physicalAddr] = static_cast<uint8>(val & 0xFF);
-								updateDisplay();  // This will refresh the main view
-								dismissPrevious(); // 現在のバイト選択ビューを閉じる
-								size_t baseAddr = byteAddr & ~7; // 8バイト境界に合わせる
+								updateDisplay();
+								dismissPrevious();
+								size_t baseAddr = byteAddr & ~7;
 								pushAndShow(makeByteSelectionView(baseAddr), appContext().defaultInputEvent()); 
-								// Note: We can't update the byte selection view here  
-								// because we don't have access to byteItems or j  
 							}
 							return true;
 						});
@@ -412,7 +505,6 @@ class WRAMViewerView : public TableView, public MainAppHelper
 			};
 		}  
   
-		// TableViewを作成して返す  
 		return std::make_unique<TableView>  
 		(  
 			std::format("Select Byte (${:06X}-${:06X})", baseAddr, baseAddr + 7),  
@@ -431,7 +523,8 @@ class WRAMViewerView : public TableView, public MainAppHelper
 		);  
 	}
 
-	std::array<MenuItem*, 4 + ITEMS_PER_PAGE> menuItems;
+	// メニューアイテム配列のサイズを拡張（検索機能用に2つ追加）
+	std::array<MenuItem*, 6 + ITEMS_PER_PAGE> menuItems;
 
 public:
 	WRAMViewerView(ViewAttachParams attach):
@@ -451,15 +544,17 @@ public:
 			};
 		}
 
-		// メニュー配列の設定
+		// メニュー配列の設定（検索機能を含む）
 		menuItems[0] = &addressHeading;
 		menuItems[1] = &addressRange;
 		menuItems[2] = &displayMode;
-		menuItems[3] = &dataHeading;
+		menuItems[3] = &searchItem;      // 新しい検索機能
+		menuItems[4] = &nextResult;      // 新しい次の結果機能
+		menuItems[5] = &dataHeading;
 
 		for(size_t i = 0; i < ITEMS_PER_PAGE; i++)
 		{
-			menuItems[4 + i] = &wramItems[i];
+			menuItems[6 + i] = &wramItems[i]; // オフセットを2つ増加
 		}
 	}
 
