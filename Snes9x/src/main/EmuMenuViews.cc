@@ -349,11 +349,11 @@ class WRAMViewerView : public TableView, public MainAppHelper
 					if(val > 0xFF)
 					{
 						app().postMessage(true, "Value must be <= FF");
-						return false;
+						return true;
 					}
 					searchValue = static_cast<uint8_t>(val);
 					searchValueItem.set2ndName(std::format("{:02X}", searchValue));
-					return true;
+					return false;
 				});
 		}
 	};
@@ -379,7 +379,8 @@ class WRAMViewerView : public TableView, public MainAppHelper
 
 	DualTextMenuItem searchResultsCount
 	{
-		"Results Found", "0", attachParams()
+		"Results Found", "0", attachParams(),
+		[this](Input::Event e) {}
 	};
 
 	TextHeadingMenuItem dataHeading{"WRAM Data", attachParams()};
